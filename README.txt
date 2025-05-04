@@ -1,0 +1,1 @@
+The application is a simple gui with table view and possibility to read and write information to a chosen google sheet, using api key (for reading) or oath2 framework to read/write.
