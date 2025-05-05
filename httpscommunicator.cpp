@@ -9,6 +9,7 @@ HTTPScommunicator::HTTPScommunicator(QObject *tata):QObject(tata),replyHandler(8
     connect(&authorazer,&QOAuth2AuthorizationCodeFlow::granted,this,&HTTPScommunicator::authapprove);
     connect(&authorazer,SIGNAL(error(QString,QString,QUrl)),this,SLOT(errcatch(QString,QString,QUrl)));
     authorized = true;
+    httpflags = noFlags;
     return;
 }
 
@@ -22,6 +23,17 @@ HTTPScommunicator::~HTTPScommunicator()
     return;
 }
 
+void HTTPScommunicator::setFlags(unsigned char flags)
+{
+    httpflags = flags;
+    return;
+}
+
+unsigned char HTTPScommunicator::getFlags() const
+{
+    return httpflags;
+}
+
 void HTTPScommunicator::errcatch(const QString& error, const QString& errorDescription, const QUrl& uri)
 {
     QString err("OAuth error: "+error+"; description: "+errorDescription+"; uri: "+uri.toString());
@@ -33,7 +45,14 @@ void HTTPScommunicator::replyFinishedCatch(QNetworkReply* reply)
 {
     if(reply->error()==QNetworkReply::NoError)
     {
-        emit finished(reply->readAll());
+        if((httpflags&oauth2Method)&&(httpflags&OAuthWriteMode))
+        {
+
+        }
+        else
+        {
+            emit finished(reply->readAll());
+        }
     }
     else
     {
@@ -45,7 +64,7 @@ void HTTPScommunicator::replyFinishedCatch(QNetworkReply* reply)
             errstr.append(redirectAttr.toUrl().toString());
         }
         QVariant Location(reply->header(QNetworkRequest::LocationHeader));
-            errstr.append(" "+Location.toUrl().toString());
+        errstr.append(" "+Location.toUrl().toString());
         emit errormsg(errstr);
     }
     disconnect(reply,SIGNAL(downloadProgress(qint64,qint64)),this,SIGNAL(progress(qint64,qint64)));
@@ -102,6 +121,10 @@ void HTTPScommunicator::writeRequest(const QString& SSID, const QString& SSname,
 
 
     QString urlstr("https://sheets.googleapis.com/v4/spreadsheets/"+SSID+"/values/"+SSname+"!"+range/*+":append"*/);
+    if(httpflags&GoogleSheetsAppendMode)
+    {
+        urlstr.append(":append");
+    }
     QUrlQuery query;
     query.addQueryItem("valueInputOption","USER_ENTERED");
     //query.addQueryItem("key",Client_ID);
@@ -112,7 +135,15 @@ void HTTPScommunicator::writeRequest(const QString& SSID, const QString& SSname,
     request.setHeader(QNetworkRequest::ContentTypeHeader,"application/json");
     request.setRawHeader("Expect", "");
     request.setRawHeader("Authorization",QString("Bearer "+authorazer.token()).toUtf8());
-    QNetworkReply * reply = communicator_put->put(request,data);
+    QNetworkReply * reply = nullptr;
+    if(httpflags&GoogleSheetsAppendMode)
+    {
+        reply = communicator_put->post(request,data);
+    }
+    else
+    {
+        reply = communicator_put->put(request,data);
+    }
     connect(reply,SIGNAL(downloadProgress(qint64,qint64)),this,SIGNAL(progress(qint64,qint64)));
     return;
 }
@@ -132,13 +163,21 @@ void HTTPScommunicator::readRquest(const QString& SSID, const QString& SSname, c
         return;
     }
     QString urlstr("https://sheets.googleapis.com/v4/spreadsheets/"+SSID+"/values/"+SSname+"!"+range);
-    QUrlQuery query;
-    query.addQueryItem("key",APIkey);
-    QUrl url(urlstr);
-    url.setQuery(query);
-    QNetworkRequest request;
-    request.setUrl(url);
-    QNetworkReply * reply = communicator->get(request);
+    QNetworkReply * reply = nullptr;
+    if(httpflags&oauth2Method)
+    {
+
+    }
+    else
+    {
+        QUrlQuery query;
+        query.addQueryItem("key",APIkey);
+        QUrl url(urlstr);
+        url.setQuery(query);
+        QNetworkRequest request;
+        request.setUrl(url);
+        reply = communicator->get(request);
+    }
     connect(reply,SIGNAL(downloadProgress(qint64,qint64)),this,SIGNAL(progress(qint64,qint64)));
     return;
 }
