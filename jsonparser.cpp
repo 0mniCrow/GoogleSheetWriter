@@ -57,15 +57,6 @@ bool JSONparser::parseDataToJSON(const QVector<QVector<QVariant>>& data, const Q
     mainObj.insert("values",values);
     mainDoc.setObject(mainObj);
     container = mainDoc.toJson(QJsonDocument::Compact);
-    //!__________________
-//    QString filename(QFileDialog::getOpenFileName(
-//                         nullptr,"Open Json file",QDir::currentPath(),
-//                         "JSON file (*.json)",nullptr,QFileDialog::DontUseNativeDialog));
-//    QFile file(filename);
-//    file.open(QIODevice::WriteOnly);
-//    file.write(container);
-//    file.close();
-//    //!_____________________
     return true;
 }
 
@@ -113,6 +104,79 @@ bool JSONparser::parseJSONToData(const QByteArray& data, QVector<QVector<QVarian
         }
         container.append(temp);
     }
+    return true;
+}
+
+bool JSONparser::parseJSONAnswerToText(const QByteArray& data, QString& container)
+{
+    if(data.isEmpty())
+    {
+        lastError = "Json answer is empty;";
+        return false;
+    }
+    QJsonParseError jsonErr;
+    QJsonDocument mainDoc(QJsonDocument::fromJson(data,&jsonErr));
+    if(jsonErr.error!=QJsonParseError::NoError)
+    {
+        lastError = jsonErr.errorString();
+        return false;
+    }
+    QJsonObject mainObj(mainDoc.object());
+    container.clear();
+    container.append("SpreadSheet ID:"+mainObj.value("spreadsheetId").toString()+";\n");
+    if(mainObj.contains("updatedRange")||mainObj.contains("tableRange"))
+    {
+        bool meta = mainObj.contains("tableRange");
+        QJsonObject metaObj;
+        if(meta)
+        {
+            metaObj = mainObj.value("updates").toObject();
+            container.append("Appended: \n");
+        }
+        else
+        {
+            container.append("Updated: \n");
+        }
+        QString updRange(meta?metaObj.value("updatedRange").toString():mainObj.value("updatedRange").toString());;
+        QStringList list(updRange.split(QLatin1Char('!')));
+        container.append("\tUpdated sheet: "+list.at(0)+";\n");
+        container.append("\tUpdated range: "+list.at(1)+";\n");
+        container.append("\tUpdated rows: "+QString::number(meta?metaObj.value("updatedRows").toInt():
+                                               mainObj.value("updatedRows").toInt())+";\n");
+        container.append("\tUpdated columns: "+QString::number(meta?metaObj.value("updatedColumns").toInt():
+                                                   mainObj.value("updatedColumns").toInt())+";\n");
+        container.append("\tUpdated cells: "+QString::number(meta?metaObj.value("updatedCells").toInt():
+                                                 mainObj.value("updatedCells").toInt())+";\n");
+    }
+    else if(mainObj.contains("responses"))
+    {
+        container.append("Multiple ranges updated: \n");
+        container.append("Total updated sheets:"+QString::number(mainObj.value("totalUpdatedSheets").toInt())+";\n\n");
+        QJsonArray ranges(mainObj.value("responses").toArray());
+        for(int i = 0; i<ranges.size();i++)
+        {
+            QJsonObject metaObj(ranges.at(i).toObject());
+            QStringList list(metaObj.value("updatedRange").toString().split(QLatin1Char('!')));
+            container.append("\tUpdated sheet: "+list.at(0)+";\n");
+            container.append("\tUpdated range: "+list.at(1)+";\n");
+            container.append("\tUpdated rows: "+QString::number(metaObj.value("updatedRows").toInt())+";\n");
+            container.append("\tUpdated columns: "+QString::number(metaObj.value("updatedColumns").toInt())+";\n");
+            container.append("\tUpdated cells: "+QString::number(metaObj.value("updatedCells").toInt())+";\n\n");
+        }
+    }
+    return true;
+}
+
+bool JSONparser::saveJsonToFile(const QByteArray& data, const QString& filename)
+{
+    QFile file(filename);
+    if(!file.open(QIODevice::WriteOnly))
+    {
+        lastError="Can't open file ["+filename+"];";
+        return false;
+    }
+    file.write(data);
+    file.close();
     return true;
 }
 
