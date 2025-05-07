@@ -113,7 +113,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QGroupBox" name="groupBox_2">
+         <widget class="QGroupBox" name="groupBox_OAuth2">
           <property name="title">
            <string>Authification</string>
           </property>
@@ -243,6 +243,20 @@
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="QPushButton" name="ButtonSave">
+         <property name="text">
+          <string>Save</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="ButtonLoad">
+         <property name="text">
+          <string>Load</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </item>
     </layout>
@@ -310,7 +324,7 @@
     </layout>
    </item>
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout_7" stretch="2,1">
+    <layout class="QVBoxLayout" name="verticalLayout_7" stretch="3,1">
      <property name="bottomMargin">
       <number>0</number>
      </property>

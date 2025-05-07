@@ -75,53 +75,61 @@ bool JSONparser::parseJSONToData(const QByteArray& data, QVector<QVector<QVarian
         return false;
     }
     QJsonObject mainObj(mainDoc.object());
-    QJsonArray rows(mainObj.value("values").toArray());
-    container.clear();
-    for(int i = 0; i<rows.size();i++)
+    if(mainObj.contains("values"))
     {
-        QVector<QVariant> temp;
-        QJsonArray columns(rows[i].toArray());
-        for(int j = 0; j<columns.size();j++)
+        QJsonArray rows(mainObj.value("values").toArray());
+        container.clear();
+        for(int i = 0; i<rows.size();i++)
         {
-            QVariant var;
-            if(columns.at(j).isString())
+            QVector<QVariant> temp;
+            QJsonArray columns(rows[i].toArray());
+            for(int j = 0; j<columns.size();j++)
             {
-                var = columns.at(j).toString();
+                QVariant var;
+                if(columns.at(j).isString())
+                {
+                    var = columns.at(j).toString();
+                }
+                else if(columns.at(j).isDouble())
+                {
+                    var = columns.at(j).toDouble();
+                }
+                else if(columns.at(j).isBool())
+                {
+                    var = columns.at(j).toBool();
+                }
+                else
+                {
+                    var = columns.at(j).toInt();
+                }
+                temp.append(var);
             }
-            else if(columns.at(j).isDouble())
-            {
-                var = columns.at(j).toDouble();
-            }
-            else if(columns.at(j).isBool())
-            {
-                var = columns.at(j).toBool();
-            }
-            else
-            {
-                var = columns.at(j).toInt();
-            }
-            temp.append(var);
+            container.append(temp);
         }
-        container.append(temp);
+    }
+    else
+    {
+        parseJSONAnswerToText(mainObj, lastError);
+        return false;
     }
     return true;
 }
 
-bool JSONparser::parseJSONAnswerToText(const QByteArray& data, QString& container)
+bool JSONparser::parseJSONAnswerToText(QJsonObject &mainObj, QString& container)
 {
-    if(data.isEmpty())
-    {
-        lastError = "Json answer is empty;";
-        return false;
-    }
-    QJsonParseError jsonErr;
-    QJsonDocument mainDoc(QJsonDocument::fromJson(data,&jsonErr));
-    if(jsonErr.error!=QJsonParseError::NoError)
-    {
-        lastError = jsonErr.errorString();
-        return false;
-    }
-    QJsonObject mainObj(mainDoc.object());
+//    if(mainObj.isEmpty())
+//    {
+//        lastError = "Json answer is empty;";
+//        return false;
+//    }
+//    QJsonParseError jsonErr;
+//    QJsonDocument mainDoc(QJsonDocument::fromJson(mainObj,&jsonErr));
+//    if(jsonErr.error!=QJsonParseError::NoError)
+//    {
+//        lastError = jsonErr.errorString();
+//        return false;
+//    }
+//    QJsonObject mainObj(mainDoc.object());
     container.clear();
     container.append("SpreadSheet ID:"+mainObj.value("spreadsheetId").toString()+";\n");
     if(mainObj.contains("updatedRange")||mainObj.contains("tableRange"))
@@ -177,6 +185,18 @@ bool JSONparser::saveJsonToFile(const QByteArray& data, const QString& filename)
     }
     file.write(data);
     file.close();
+    return true;
+}
+
+bool JSONparser::loadJsonFromFile(QByteArray& container, const QString& filename)
+{
+    QFile file(filename);
+    if(!file.open(QIODevice::ReadOnly))
+    {
+        lastError="Can't open file ["+filename+"];";
+        return false;
+    }
+    container = file.readAll();
     return true;
 }
 

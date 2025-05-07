@@ -7,6 +7,9 @@
 #include "jsonparser.h"
 #include <algorithm>
 #include <QFileDialog>
+#include <QTextStream>
+#include <QRadioButton>
+#include <QButtonGroup>
 
 namespace Ui {
 class GoogleSheetsModifier;
@@ -16,6 +19,7 @@ class GoogleSheetsModifier : public QWidget
 {
     Q_OBJECT
 private:
+    QButtonGroup radButGroup;
     GoogleSheetModel * model;
     QItemSelectionModel * select_model;
     HTTPScommunicator * communicator;
@@ -31,14 +35,21 @@ private slots:
     void addColumn();
     void removeRow();
     void removeColumn();
-    void chooseFile();
-    void loadFile();
+    void chooseAPICredentialFile();
+    void loadAPICredentialFile();
+    void chooseOAuthCredentialFile();
+    void loadOAuthCredentialFile();
+
     void write();
     void read();
+    void save();
+    void load();
     void setProgressBar(qint64 val,qint64 total);
     void getErrMsg(const QString& errMsg);
     void getFinishedSignal(const QByteArray& data);
     void authificate();
+
+    void checkRadioGroup();
 
 private:
     Ui::GoogleSheetsModifier *ui;

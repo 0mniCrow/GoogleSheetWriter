@@ -37,14 +37,13 @@ private slots:
     void replyFinishedCatch(QNetworkReply* reply);
     void authapprove();
     void errcatch(const QString& error, const QString& errorDescription, const QUrl& uri);
-    void setFlags(unsigned char flags);
-
 public slots:
     void writeRequest(const QString& SSID, const QString& SSname,
                       const QString& range, const QByteArray& data);
     void readRquest(const QString& SSID, const QString& SSname, const QString& APIkey,
                     const QString& range);
     void AuthorizeRequest(const QString& Client_ID,const QString& Client_Secret);
+    void setFlags(unsigned char flags);
 signals:
     void finished(const QByteArray& answer);
     void progress(qint64 recieved, qint64 total);
