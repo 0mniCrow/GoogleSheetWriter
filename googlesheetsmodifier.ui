@@ -315,9 +315,16 @@
       </spacer>
      </item>
      <item>
-      <widget class="QLabel" name="InfoLabel">
+      <widget class="QPushButton" name="Button_Save_settings">
        <property name="text">
-        <string>Info</string>
+        <string>Save settings</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="Button_LoadSettings">
+       <property name="text">
+        <string>Load settings</string>
        </property>
       </widget>
      </item>

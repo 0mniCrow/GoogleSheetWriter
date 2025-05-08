@@ -22,8 +22,8 @@ public:
 
     bool parseDataToJSON(const QVector<QVector<QVariant>>& data, const QString& sheetName, QByteArray& container);
     bool parseJSONToData(const QByteArray& data, QVector<QVector<QVariant>>& container);
-    bool saveJsonToFile(const QByteArray& data, const QString& filename);
-    bool loadJsonFromFile(QByteArray& container, const QString& filename);
+    //bool saveJsonToFile(const QByteArray& data, const QString& filename);
+    //bool loadJsonFromFile(QByteArray& container, const QString& filename);
     QString getLastError() const;
 
 };

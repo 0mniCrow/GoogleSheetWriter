@@ -5,11 +5,13 @@
 #include "googlesheetmodel.h"
 #include "httpscommunicator.h"
 #include "jsonparser.h"
+#include "filemanager.h"
 #include <algorithm>
 #include <QFileDialog>
 #include <QTextStream>
 #include <QRadioButton>
 #include <QButtonGroup>
+#include <QPalette>
 
 namespace Ui {
 class GoogleSheetsModifier;
@@ -24,7 +26,7 @@ private:
     QItemSelectionModel * select_model;
     HTTPScommunicator * communicator;
     JSONparser parser;
-    bool readMode;
+    FileManager filemanager;
     bool checkFields();
 public:
     explicit GoogleSheetsModifier(QWidget *parent = 0);
@@ -48,6 +50,9 @@ private slots:
     void getErrMsg(const QString& errMsg);
     void getFinishedSignal(const QByteArray& data);
     void authificate();
+
+    void saveSettings();
+    void loadSettings();
 
     void checkRadioGroup();
 

@@ -13,12 +13,14 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
+    filemanager.cpp \
         googlesheetsmodifier.cpp \
     httpscommunicator.cpp \
     jsonparser.cpp \
     googlesheetmodel.cpp
 
 HEADERS  += googlesheetsmodifier.h \
+    filemanager.h \
     httpscommunicator.h \
     jsonparser.h \
     googlesheetmodel.h

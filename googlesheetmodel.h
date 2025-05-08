@@ -4,6 +4,7 @@
 #include <QAbstractItemModel>
 #include <QAbstractTableModel>
 #include <QItemSelectionModel>
+#include <QColor>
 #define ROWS 6
 #define COLUMNS 5
 

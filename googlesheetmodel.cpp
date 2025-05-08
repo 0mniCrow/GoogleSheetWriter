@@ -44,10 +44,26 @@ QVariant GoogleSheetModel::data(const QModelIndex &index, int role) const
     {
         return dataHolder.at(index.row()).at(index.column());
     }
-//    else if(role==Qt::BackgroundColorRole)
-//    {
-//        return QVariant();
-//    }
+    else if(role==Qt::BackgroundRole)
+    {
+        QVariant dataInfo(dataHolder.at(index.row()).at(index.column()));
+
+        if(!dataInfo.isNull())
+        {
+            if(index.row()<loadedData.size())
+            {
+                if(index.column()<loadedData.at(index.row()).size())
+                {
+                    QVariant loadedInfo(loadedData.at(index.row()).at(index.column()));
+                    if(dataInfo!=loadedInfo)
+                    {
+                        return QColor(247,111,111);
+                    }
+                }
+            }
+        }
+        return QVariant();
+    }
     return QVariant();
 }
 
@@ -59,8 +75,15 @@ bool GoogleSheetModel::setData(const QModelIndex& index, const QVariant &value, 
     }
     if(role==Qt::EditRole)
     {
-        dataHolder[index.row()][index.column()].setValue(value);
-        //dataHolder[index.row()].value(index.column())=value;
+        QVariant subValue = value;
+        if(value.typeId()==QMetaType::QString)
+        {
+            if(subValue.toString().isEmpty())
+            {
+                subValue.clear();
+            }
+        }
+        dataHolder[index.row()][index.column()].setValue(subValue);
         emit dataChanged(index,index);
         return true;
     }

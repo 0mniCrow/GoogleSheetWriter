@@ -175,6 +175,7 @@ bool JSONparser::parseJSONAnswerToText(QJsonObject &mainObj, QString& container)
     return true;
 }
 
+/*
 bool JSONparser::saveJsonToFile(const QByteArray& data, const QString& filename)
 {
     QFile file(filename);
@@ -199,8 +200,9 @@ bool JSONparser::loadJsonFromFile(QByteArray& container, const QString& filename
     container = file.readAll();
     return true;
 }
-
+*/
 QString JSONparser::getLastError() const
 {
     return lastError;
 }
+
