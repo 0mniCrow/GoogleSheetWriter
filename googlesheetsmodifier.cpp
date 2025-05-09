@@ -79,7 +79,7 @@ void GoogleSheetsModifier::addRow()
     QModelIndexList indexList(select_model->selectedIndexes());
     if(indexList.isEmpty())
     {
-        model->insertRows(model->rowCount(QModelIndex())-1,1,QModelIndex());
+        model->insertRows(model->rowCount(QModelIndex()),1,QModelIndex());
         return;
     }
     QModelIndexList::iterator max = std::max_element(indexList.begin(),indexList.end(),
@@ -96,7 +96,7 @@ void GoogleSheetsModifier::addColumn()
     QModelIndexList indexList(select_model->selectedIndexes());
     if(indexList.isEmpty())
     {
-        model->insertColumns(model->columnCount(QModelIndex())-1,1,QModelIndex());
+        model->insertColumns(model->columnCount(QModelIndex()),1,QModelIndex());
         return;
     }
     QModelIndexList::iterator max = std::max_element(indexList.begin(),indexList.end(),
