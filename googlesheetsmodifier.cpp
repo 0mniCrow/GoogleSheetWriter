@@ -35,6 +35,7 @@ GoogleSheetsModifier::GoogleSheetsModifier(QWidget *parent) :
     connect(ui->radioButton_OAuth2,SIGNAL(clicked(bool)),this,SLOT(checkRadioGroup()));
     connect(ui->Button_Save_settings,SIGNAL(clicked(bool)),this,SLOT(saveSettings()));
     connect(ui->Button_LoadSettings,SIGNAL(clicked(bool)),this,SLOT(loadSettings()));
+    loadSettings();
     return;
 }
 
@@ -253,27 +254,27 @@ void GoogleSheetsModifier::loadOAuthCredentialFile()
 
 bool GoogleSheetsModifier::checkFields()
 { 
-    if((!ui->lineSheetName->text().isEmpty())&&
-        (!ui->lineSpreadSheetID->text().isEmpty()))
+    if((ui->lineSheetName->text().isEmpty())||
+        (ui->lineSpreadSheetID->text().isEmpty()))
     {
-        getErrMsg("Sheet Name or Spread Sheet ID is empty;");
+        getErrMsg("Credentials missing Error: Sheet Name or Spread Sheet ID is empty;");
         return false;
     }
     if(communicator->getFlags()&HTTPScommunicator::oauth2Method)
     {
-        if((!ui->lineClientID->text().isEmpty())&&
-            (!ui->lineClientSecret->text().isEmpty()))
+        if((ui->lineClientID->text().isEmpty())||
+            (ui->lineClientSecret->text().isEmpty()))
         {
-            getErrMsg("OAuth2 credentials are empty;");
+            getErrMsg("Credentials missing Error: OAuth2 credentials are empty;");
             return false;
         }
 
     }
     else
     {
-        if(!ui->line_API_Key->text().isEmpty())
+        if(ui->line_API_Key->text().isEmpty())
         {
-            getErrMsg("API_Key is empty;");
+            getErrMsg("Credentials missing Error: API_Key is empty;");
             return false;
         }
     }
@@ -284,12 +285,12 @@ void GoogleSheetsModifier::write()
 {
     if(!checkFields())
     {
-        getErrMsg("Nessesary fields are empty;");
+        getErrMsg("Write method Error: Nessesary fields are empty;");
         return;
     }
     if(!(communicator->isAuthorized()))
     {
-        getErrMsg("User wasn't authorized;");
+        getErrMsg("Write method Error: User wasn't authorized;");
         return;
     }
     QVector<QVector<QVariant>> container;
@@ -314,20 +315,22 @@ void GoogleSheetsModifier::read()
 {
     if(!checkFields())
     {
-        getErrMsg("Nessesary fields are empty;");
+        getErrMsg("Read method Error: Nessesary fields are empty;");
         return;
     }
     int rows = model->rowCount(QModelIndex());
     int columns = model->columnCount(QModelIndex());
     if((!rows)&&(!columns))
     {
-        getErrMsg("Range is empty;");
+        getErrMsg("Read method Error: Range of reading isn't selected (Create nessesary amount of rows and columns);");
         return;
     }
-    QString range("R1C1:R"+QString::number(rows)+"C"+QString::number(columns));
-    communicator->readRquest(ui->lineSpreadSheetID->text()
+    char va = 'A'+ rows -1;
+    QString range1(QString("A1:")+QChar(va)+QString::number(columns));
+    //QString range("R1C1:R"+QString::number(rows)+"C"+QString::number(columns));
+    communicator->readRequest(ui->lineSpreadSheetID->text()
                              ,ui->lineSheetName->text(),
-                             ui->line_API_Key->text(),range);
+                             range1,ui->line_API_Key->text());
     return;
 }
 

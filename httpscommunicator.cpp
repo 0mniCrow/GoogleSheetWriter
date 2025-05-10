@@ -3,9 +3,9 @@
 HTTPScommunicator::HTTPScommunicator(QObject *tata):QObject(tata),replyHandler(8080)
 {
     communicator = new QNetworkAccessManager();
-    communicator_put = new QNetworkAccessManager();
+    //communicator_put = new QNetworkAccessManager();
     connect(communicator,SIGNAL(finished(QNetworkReply*)),this,SLOT(replyFinishedCatch(QNetworkReply*)));
-    connect(communicator_put,SIGNAL(finished(QNetworkReply*)),this,SLOT(replyFinishedCatch(QNetworkReply*)));
+    //connect(communicator_put,SIGNAL(finished(QNetworkReply*)),this,SLOT(replyFinishedCatch(QNetworkReply*)));
     connect(&authorazer,&QOAuth2AuthorizationCodeFlow::granted,this,&HTTPScommunicator::authapprove);
     connect(&authorazer,SIGNAL(error(QString,QString,QUrl)),this,SLOT(errcatch(QString,QString,QUrl)));
     authorized = true;
@@ -18,7 +18,7 @@ HTTPScommunicator::~HTTPScommunicator()
     disconnect(communicator,SIGNAL(finished(QNetworkReply*)),this,SLOT(replyFinishedCatch(QNetworkReply*)));
 
     delete communicator;
-    delete communicator_put;
+    //delete communicator_put;
 
     return;
 }
@@ -45,19 +45,12 @@ void HTTPScommunicator::replyFinishedCatch(QNetworkReply* reply)
 {
     if(reply->error()==QNetworkReply::NoError)
     {
-        if((httpflags&oauth2Method)&&(httpflags&OAuthWriteMode))
-        {
-
-        }
-        else
-        {
-            emit finished(reply->readAll());
-        }
+        emit finished(reply->readAll());
     }
     else
     {
         int err = reply->error();
-        QString errstr(reply->errorString()+QString::number(err));
+        QString errstr("Error from server: "+(reply->errorString()+QString::number(err)));
         QVariant redirectAttr(reply->attribute(QNetworkRequest::RedirectionTargetAttribute));
         if(redirectAttr.isValid())
         {
@@ -89,33 +82,42 @@ void HTTPScommunicator::AuthorizeRequest(const QString& Client_ID,const QString&
 
 void HTTPScommunicator::authapprove()
 {
-    authorized = true;
+    httpflags|=OAuthAuthorized;
     emit errormsg("User is authorized;");
     return;
 }
 
 bool HTTPScommunicator::isAuthorized() const
 {
-    return authorized;
+    return httpflags&OAuthAuthorized;
 }
 
 void HTTPScommunicator::writeRequest(const QString& SSID, const QString& SSname,
                                      const QString &range, const QByteArray& data)
 {
-    if(!communicator_put)
+    if(!(httpflags&oauth2Method))
     {
-        emit errormsg("Communication object doesn't exist;");
+        emit errormsg("Writing to server Error: writing to the server can be only committed with OAuth2 method;");
         return;
     }
-
+    if(!(httpflags&OAuthAuthorized))
+    {
+        emit errormsg("Writing to server Error: OAuth2 communication hasn't been authorized;");
+        return;
+    }
+    if(!communicator/*_put*/)
+    {
+        emit errormsg("Writing to server Error: Communicator doesn't exist;");
+        return;
+    }
     if(SSID.isEmpty()||SSname.isEmpty()||range.isEmpty())
     {
-        emit errormsg("One of parameters missing;");
+        emit errormsg("Writing to server Error: One of address parameters is missing;");
         return;
     }
     if(data.isEmpty())
     {
-        emit errormsg("Nothing is in the request;");
+        emit errormsg("Writing to server Error: Can't write: user table is empty;");
         return;
     }
 
@@ -138,46 +140,58 @@ void HTTPScommunicator::writeRequest(const QString& SSID, const QString& SSname,
     QNetworkReply * reply = nullptr;
     if(httpflags&GoogleSheetsAppendMode)
     {
-        reply = communicator_put->post(request,data);
+        reply = communicator/*_put*/->post(request,data);
     }
     else
     {
-        reply = communicator_put->put(request,data);
+        reply = communicator/*_put*/->put(request,data);
     }
     connect(reply,SIGNAL(downloadProgress(qint64,qint64)),this,SIGNAL(progress(qint64,qint64)));
     return;
 }
 
-void HTTPScommunicator::readRquest(const QString& SSID, const QString& SSname, const QString& APIkey,
-                const QString& range)
+void HTTPScommunicator::readRequest(const QString& SSID, const QString& SSname,
+                const QString& range, const QString& APIkey)
 {
     if(!communicator)
     {
-        emit errormsg("Communication object doesn't exist;");
+        emit errormsg("Reading from server Error: Communicator doesn't exist;");
         return;
     }
 
-    if(SSID.isEmpty()||SSname.isEmpty()||APIkey.isEmpty()||range.isEmpty())
+    if(SSID.isEmpty()||SSname.isEmpty()||range.isEmpty())
     {
-        emit errormsg("One of parameters missing;");
+        emit errormsg("Reading from server Error: One of address parameters is missing;");
         return;
+    }
+    if(!(httpflags&oauth2Method))
+    {
+        if(APIkey.isEmpty())
+        {
+            emit errormsg("Reading from server Error: API key is required when API_key method is used;");
+            return;
+        }
     }
     QString urlstr("https://sheets.googleapis.com/v4/spreadsheets/"+SSID+"/values/"+SSname+"!"+range);
-    QNetworkReply * reply = nullptr;
+    QUrl url(urlstr);
+    QUrlQuery query;
+    QNetworkRequest request;
     if(httpflags&oauth2Method)
     {
-
+//        query.addQueryItem("valueInputOption","USER_ENTERED");
+//        url.setQuery(query);
+        request.setUrl(url);
+        request.setHeader(QNetworkRequest::ContentTypeHeader,"application/json");
+        request.setRawHeader("Expect", "");
+        request.setRawHeader("Authorization",QString("Bearer "+authorazer.token()).toUtf8());
     }
     else
     {
-        QUrlQuery query;
         query.addQueryItem("key",APIkey);
-        QUrl url(urlstr);
         url.setQuery(query);
-        QNetworkRequest request;
         request.setUrl(url);
-        reply = communicator->get(request);
     }
+    QNetworkReply * reply = communicator->get(request);
     connect(reply,SIGNAL(downloadProgress(qint64,qint64)),this,SIGNAL(progress(qint64,qint64)));
     return;
 }
