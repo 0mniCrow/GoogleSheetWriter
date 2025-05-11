@@ -8,7 +8,7 @@
 class FileManager
 {
 private:
-
+    QString lastfilepath;
 public:
     FileManager();
     bool saveJSONdataToFile(const QByteArray& data, const QString& filename);
@@ -17,6 +17,8 @@ public:
     bool loadPreferences(QStringList& container);
     bool openAPIfile(const QString& filename, QString & container);
     bool openOAuthFile(const QString& filename, QStringList& container);
+    void setlastfilepath(const QString& filepath);
+    QString getlastfilepath() const;
 };
 
 #endif // FILEMANAGER_H

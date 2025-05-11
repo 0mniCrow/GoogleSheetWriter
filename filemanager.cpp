@@ -5,6 +5,17 @@ FileManager::FileManager()
 
 }
 
+void FileManager::setlastfilepath(const QString& filepath)
+{
+    lastfilepath = filepath;
+    return;
+}
+
+QString FileManager::getlastfilepath() const
+{
+    return lastfilepath;
+}
+
 bool FileManager::saveJSONdataToFile(const QByteArray& data, const QString& filename)
 {
     QFile file(filename);

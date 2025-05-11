@@ -155,31 +155,28 @@ void GoogleSheetsModifier::removeColumn()
 
 void GoogleSheetsModifier::chooseAPICredentialFile()
 {
+    QString lastpath(filemanager.getlastfilepath());
+    if(lastpath.isEmpty())
+    {
+        lastpath = QDir::currentPath();
+    }
     QString filename(QFileDialog::getOpenFileName(
-                         this,"Open API key file",QDir::currentPath(),
+                         this,"Open API key file",lastpath,
                          "Text file (*.txt)",nullptr,QFileDialog::DontUseNativeDialog));
+
+    QString controlpath = QDir::cleanPath(filename);
+
     ui->lineAPI_key_filename->setText(filename);
-    loadAPICredentialFile();
+    if(!filename.isEmpty())
+    {
+        filemanager.setlastfilepath(filename.left(filename.lastIndexOf('.')));
+        loadAPICredentialFile();
+    }
     return;
 }
 
 void GoogleSheetsModifier::loadAPICredentialFile()
 {
-    /*
-    if(!QFile::exists(ui->lineAPI_key_filename->text()))
-    {
-        getErrMsg("Address ["+ui->lineAPI_key_filename->text()+"] doesn't exist;");
-        return;
-    }
-    QFile apiFile(ui->lineAPI_key_filename->text());
-    if(!apiFile.open(QIODevice::ReadOnly))
-    {
-        getErrMsg("Can't open ["+ui->lineAPI_key_filename->text()+"] file;");
-        return;
-    }
-    ui->line_API_Key->setText(QString(apiFile.readAll()));
-    apiFile.close();
-    */
     QString filename(ui->lineAPI_key_filename->text());
     QString Api_key;
     if(!filemanager.openAPIfile(filename,Api_key))
@@ -192,44 +189,27 @@ void GoogleSheetsModifier::loadAPICredentialFile()
 
 void GoogleSheetsModifier::chooseOAuthCredentialFile()
 {
+    QString lastpath(filemanager.getlastfilepath());
+    if(lastpath.isEmpty())
+    {
+        lastpath = QDir::currentPath();
+    }
     QString filename(QFileDialog::getOpenFileName(
-                         this,"Open OAuth2 credential file",QDir::currentPath(),
+                         this,"Open OAuth2 credential file",lastpath,
                          "Text file (*.txt)",nullptr,QFileDialog::DontUseNativeDialog));
     ui->lineEdit_OAuth_filename->setText(filename);
-    loadOAuthCredentialFile();
+
+    QString controlpath = QDir::cleanPath(filename);
+    if(!filename.isEmpty())
+    {
+        filemanager.setlastfilepath(filename.left(filename.lastIndexOf('.')));
+        loadOAuthCredentialFile();
+    }
     return;
 }
+
 void GoogleSheetsModifier::loadOAuthCredentialFile()
 {
-    /*
-    if(!QFile::exists(ui->lineEdit_OAuth_filename->text()))
-    {
-        getErrMsg("Address ["+ui->lineAPI_key_filename->text()+"] doesn't exist;");
-        return;
-    }
-    QFile oauthFile(ui->lineAPI_key_filename->text());
-    if(!oauthFile.open(QIODevice::ReadOnly))
-    {
-        getErrMsg("Can't open ["+ui->lineAPI_key_filename->text()+"] file;");
-        return;
-    }
-    QTextStream out(&oauthFile);
-
-    while(!out.atEnd())
-    {
-        QString credentials(out.readLine());
-        if(credentials.contains("Client ID:"))
-        {
-            ui->lineClientID->setText(credentials.sliced(credentials.indexOf(':')+1));
-        }
-        else if(credentials.contains("Client secret:"))
-        {
-            ui->lineClientSecret->setText(credentials.sliced(credentials.indexOf(':')+1));
-        }
-    }
-    oauthFile.close();
-    */
-
     QString filename(ui->lineEdit_OAuth_filename->text());
     QStringList data;
     if(!filemanager.openOAuthFile(filename,data))
@@ -336,8 +316,13 @@ void GoogleSheetsModifier::read()
 
 void GoogleSheetsModifier::save()
 {
+    QString lastpath(filemanager.getlastfilepath());
+    if(lastpath.isEmpty())
+    {
+        lastpath = QDir::currentPath();
+    }
     QString filename(QFileDialog::getOpenFileName(
-                         this,"Save JSON file",QDir::currentPath(),
+                         this,"Save JSON file",lastpath,
                          "JSON (*.json)",nullptr,QFileDialog::DontUseNativeDialog));
     QVector<QVector<QVariant>> rawData;
     model->downloadDataFromModel(rawData);
@@ -350,14 +335,20 @@ void GoogleSheetsModifier::save()
     if(!filemanager.saveJSONdataToFile(JSONdata,filename))
     {
         getErrMsg("Can't save JSON data to file ["+filename+"];");
+        return;
     }
+    filemanager.setlastfilepath(filename.left(filename.lastIndexOf('.')));
     return;
 }
 void GoogleSheetsModifier::load()
 {
-
+    QString lastpath(filemanager.getlastfilepath());
+    if(lastpath.isEmpty())
+    {
+        lastpath = QDir::currentPath();
+    }
     QString filename(QFileDialog::getOpenFileName(
-                         this,"Load JSON file",QDir::currentPath(),
+                         this,"Load JSON file",lastpath,
                          "JSON (*.json)",nullptr,QFileDialog::DontUseNativeDialog));
     QByteArray JSONdata;
     QVector<QVector<QVariant>> rawData;
@@ -366,6 +357,7 @@ void GoogleSheetsModifier::load()
         getErrMsg("Can't load JSON data from file ["+filename+"];");
         return;
     }
+    filemanager.setlastfilepath(filename.left(filename.lastIndexOf('.')));
     if(!parser.parseJSONToData(JSONdata,rawData))
     {
         getErrMsg(parser.getLastError());
@@ -414,6 +406,7 @@ void GoogleSheetsModifier::saveSettings()
     settings.append("OAuth2_filename:"+ui->lineEdit_OAuth_filename->text());
     settings.append("Sheet_Name:"+ui->lineSheetName->text());
     settings.append("SpreadSheetID:"+ui->lineSpreadSheetID->text());
+    settings.append("LastDirectoryPath:"+filemanager.getlastfilepath());
     settings.append(QString("API_Key_method:")+(ui->radioButtonAPI_key->isChecked()?"Y":"N"));
     settings.append(QString("OAuth2_method:")+(ui->radioButton_OAuth2->isChecked()?"Y":"N"));
     if(!filemanager.savePreferences(settings))
@@ -448,6 +441,10 @@ void GoogleSheetsModifier::loadSettings()
         else if(str.contains("SpreadSheetID:"))
         {
             ui->lineSpreadSheetID->setText(str.sliced(str.indexOf(':')+1));
+        }
+        else if(str.contains("LastDirectoryPath:"))
+        {
+            filemanager.setlastfilepath(str.sliced(str.indexOf(':')+1));
         }
         else if(str.contains("API_Key_method:"))
         {
