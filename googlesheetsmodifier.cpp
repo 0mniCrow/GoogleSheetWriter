@@ -305,8 +305,8 @@ void GoogleSheetsModifier::read()
         getErrMsg("Read method Error: Range of reading isn't selected (Create nessesary amount of rows and columns);");
         return;
     }
-    char va = 'A'+ rows -1;
-    QString range1(QString("A1:")+QChar(va)+QString::number(columns));
+    char va = 'A'+ columns -1;
+    QString range1(QString("A1:")+QChar(va)+QString::number(rows));
     //QString range("R1C1:R"+QString::number(rows)+"C"+QString::number(columns));
     communicator->readRequest(ui->lineSpreadSheetID->text()
                              ,ui->lineSheetName->text(),

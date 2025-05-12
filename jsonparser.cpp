@@ -74,15 +74,25 @@ bool JSONparser::parseJSONToData(const QByteArray& data, QVector<QVector<QVarian
         lastError = jsonErr.errorString();
         return false;
     }
+
+//    QString ermsg = mainDoc.toJson();
+//    lastError = ermsg;
+//    return false;
+
     QJsonObject mainObj(mainDoc.object());
     if(mainObj.contains("values"))
     {
         QJsonArray rows(mainObj.value("values").toArray());
         container.clear();
+        int maxcolumnsize=0;
         for(int i = 0; i<rows.size();i++)
         {
             QVector<QVariant> temp;
             QJsonArray columns(rows[i].toArray());
+            if(maxcolumnsize<columns.size())
+            {
+                maxcolumnsize = columns.size();
+            }
             for(int j = 0; j<columns.size();j++)
             {
                 QVariant var;
@@ -106,6 +116,13 @@ bool JSONparser::parseJSONToData(const QByteArray& data, QVector<QVector<QVarian
             }
             container.append(temp);
         }
+        for(int i =0; i<container.size();i++)
+        {
+            if(container.at(i).size()<maxcolumnsize)
+            {
+                container[i].resize(maxcolumnsize);
+            }
+        }
     }
     else
     {
@@ -117,19 +134,7 @@ bool JSONparser::parseJSONToData(const QByteArray& data, QVector<QVector<QVarian
 
 bool JSONparser::parseJSONAnswerToText(QJsonObject &mainObj, QString& container)
 {
-//    if(mainObj.isEmpty())
-//    {
-//        lastError = "Json answer is empty;";
-//        return false;
-//    }
-//    QJsonParseError jsonErr;
-//    QJsonDocument mainDoc(QJsonDocument::fromJson(mainObj,&jsonErr));
-//    if(jsonErr.error!=QJsonParseError::NoError)
-//    {
-//        lastError = jsonErr.errorString();
-//        return false;
-//    }
-//    QJsonObject mainObj(mainDoc.object());
+
     container.clear();
     container.append("SpreadSheet ID:"+mainObj.value("spreadsheetId").toString()+";\n");
     if(mainObj.contains("updatedRange")||mainObj.contains("tableRange"))
@@ -175,32 +180,6 @@ bool JSONparser::parseJSONAnswerToText(QJsonObject &mainObj, QString& container)
     return true;
 }
 
-/*
-bool JSONparser::saveJsonToFile(const QByteArray& data, const QString& filename)
-{
-    QFile file(filename);
-    if(!file.open(QIODevice::WriteOnly))
-    {
-        lastError="Can't open file ["+filename+"];";
-        return false;
-    }
-    file.write(data);
-    file.close();
-    return true;
-}
-
-bool JSONparser::loadJsonFromFile(QByteArray& container, const QString& filename)
-{
-    QFile file(filename);
-    if(!file.open(QIODevice::ReadOnly))
-    {
-        lastError="Can't open file ["+filename+"];";
-        return false;
-    }
-    container = file.readAll();
-    return true;
-}
-*/
 QString JSONparser::getLastError() const
 {
     return lastError;

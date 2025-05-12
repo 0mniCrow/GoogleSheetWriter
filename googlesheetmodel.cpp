@@ -115,7 +115,7 @@ QVariant GoogleSheetModel::headerData(int section, Qt::Orientation orientation, 
     {
     case Qt::Vertical:
     {
-        answer = QString::number(section);
+        answer = QString::number(section+1);
     }
         break;
     case Qt::Horizontal:
