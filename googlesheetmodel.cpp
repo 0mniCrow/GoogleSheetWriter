@@ -134,7 +134,7 @@ Qt::ItemFlags GoogleSheetModel::flags(const QModelIndex& index) const
 {
     if(!index.isValid())
     {
-        return Qt::NoItemFlags;
+        return Qt::ItemIsDropEnabled;
     }
     if(dataHolder.isEmpty())
     {
@@ -143,7 +143,7 @@ Qt::ItemFlags GoogleSheetModel::flags(const QModelIndex& index) const
     if((index.row()<dataHolder.size())&&
             (index.column()<dataHolder.at(0).size()))
     {
-        return QAbstractTableModel::flags(index)|Qt::ItemIsEditable|Qt::ItemIsEnabled;
+        return QAbstractTableModel::flags(index)|Qt::ItemIsEditable|Qt::ItemIsEnabled|Qt::ItemIsDragEnabled;
     }
     return QAbstractTableModel::flags(index);
 }
@@ -266,5 +266,48 @@ bool GoogleSheetModel::loadDataToModel(QVector<QVector<QVariant>>& data)
 bool GoogleSheetModel::downloadDataFromModel(QVector<QVector<QVariant>>& container) const
 {
     container=dataHolder;
+    return true;
+}
+
+
+Qt::DropActions GoogleSheetModel::supportedDragActions() const
+{
+    return Qt::MoveAction;
+}
+Qt::DropActions GoogleSheetModel::supportedDropActions() const
+{
+    return Qt::MoveAction;
+}
+
+QStringList GoogleSheetModel::mimeTypes() const
+{
+    QStringList mT;
+    mT.append(QString::fromLatin1("application/x-qabstractitemmodeldatalist"));
+    return mT;
+}
+
+bool GoogleSheetModel::moveRows(const QModelIndex& sourceParent, int sourceRow, int count,
+              const QModelIndex& destParent, int destChild)
+{
+    if(!beginMoveRows(sourceParent,sourceRow,sourceRow+count-1,destParent,destChild))
+    {
+        return false;
+    }
+    dataHolder.swapItemsAt(sourceRow,destChild);
+    endMoveRows();
+    return true;
+}
+bool GoogleSheetModel::moveColumns(const QModelIndex& sourceParent, int sourceColumn, int count,
+                 const QModelIndex& destParent, int destChild)
+{
+    if(!beginMoveColumns(sourceParent,sourceColumn,sourceColumn+count-1,destParent,destChild))
+    {
+        return false;
+    }
+    for(int i = 0; i<dataHolder.size(); i++)
+    {
+        dataHolder[i].swapItemsAt(sourceColumn,destChild);
+    }
+    endMoveColumns();
     return true;
 }

@@ -29,7 +29,13 @@ public:
     bool insertRows(int row, int count, const QModelIndex& parent) override;
     bool removeColumns(int column, int count, const QModelIndex& parent) override;
     bool removeRows(int row, int count, const QModelIndex& parent) override;
-
+    Qt::DropActions supportedDragActions() const override;
+    Qt::DropActions supportedDropActions() const override;
+    QStringList mimeTypes() const override;
+    bool moveRows(const QModelIndex& sourceParent, int sourceRow, int count,
+                  const QModelIndex& destParent, int destChild) override;
+    bool moveColumns(const QModelIndex& sourceParent, int sourceColumn, int count,
+                     const QModelIndex& destParent, int destChild) override;
     bool loadDataToModel(QVector<QVector<QVariant>>& data);
     bool downloadDataFromModel(QVector<QVector<QVariant>>& container) const;
 
