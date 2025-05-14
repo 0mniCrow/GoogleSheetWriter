@@ -135,13 +135,9 @@ Qt::ItemFlags GoogleSheetModel::flags(const QModelIndex& index) const
     if(!index.isValid())
     {
         return Qt::ItemIsDropEnabled;
-    }
-    if(dataHolder.isEmpty())
-    {
-        return Qt::NoItemFlags;
-    }
-    if((index.row()<dataHolder.size())&&
-            (index.column()<dataHolder.at(0).size()))
+    } else
+//    if((index.row()<dataHolder.size())&&
+//            (index.column()<dataHolder.at(0).size()))
     {
         return QAbstractTableModel::flags(index)|Qt::ItemIsEditable|Qt::ItemIsEnabled|Qt::ItemIsDragEnabled;
     }
@@ -282,8 +278,67 @@ Qt::DropActions GoogleSheetModel::supportedDropActions() const
 QStringList GoogleSheetModel::mimeTypes() const
 {
     QStringList mT;
-    mT.append(QString::fromLatin1("application/x-qabstractitemmodeldatalist"));
+    mT.append(QString::fromLatin1("application/vnd.text.list"));
     return mT;
+}
+
+bool GoogleSheetModel::dropMimeData(const QMimeData* data, Qt::DropAction action,
+                  int row, int column, const QModelIndex& parent)
+{
+    if(action == Qt::IgnoreAction)
+    {
+        return false;
+    }
+    int beginRow = 0;
+    if(row!=-1)
+    {
+        beginRow = row;
+    }
+    else if(parent.isValid())
+    {
+        beginRow = parent.row();
+    }
+    else
+    {
+        beginRow = rowCount(QModelIndex());
+    }
+    QByteArray encoded = data->data("application/vnd.text.list");
+    QDataStream stream(&encoded,QIODevice::ReadOnly);
+    QStringList items;
+    int rows = 0;
+
+    while(!stream.atEnd())
+    {
+        QString text;
+        stream>>text;
+        items<<text;
+        ++rows;
+    }
+    insertRows(beginRow,rows,QModelIndex());
+    for(const QString& text : qAsConst(items))
+    {
+        QModelIndex idx = index(beginRow,0,QModelIndex());
+        setData(idx,text,Qt::EditRole);
+        beginRow++;
+    }
+    return true;
+}
+
+QMimeData*  GoogleSheetModel::mimeData(const QModelIndexList& indexes) const
+{
+    QMimeData* mimeData = new QMimeData();
+    QByteArray encoded;
+    QDataStream stream(&encoded, QIODevice::WriteOnly);
+    foreach(const QModelIndex& index, indexes)
+    {
+        if(index.isValid())
+        {
+            QString val(this->data(index,Qt::DisplayRole).toString());
+            stream<<val;
+        }
+    }
+    mimeData->setData("application/vnd.text.list",encoded);
+    return mimeData;
 }
 
 bool GoogleSheetModel::moveRows(const QModelIndex& sourceParent, int sourceRow, int count,

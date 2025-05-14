@@ -4,6 +4,9 @@
 #include <QAbstractItemModel>
 #include <QAbstractTableModel>
 #include <QItemSelectionModel>
+#include <QMimeData>
+#include <QDataStream>
+#include <QIODevice>
 #include <QColor>
 #define ROWS 6
 #define COLUMNS 5
@@ -36,6 +39,9 @@ public:
                   const QModelIndex& destParent, int destChild) override;
     bool moveColumns(const QModelIndex& sourceParent, int sourceColumn, int count,
                      const QModelIndex& destParent, int destChild) override;
+    bool dropMimeData(const QMimeData* data, Qt::DropAction action,
+                      int row, int column, const QModelIndex& parent) override;
+    QMimeData*  mimeData(const QModelIndexList& indexex) const override;
     bool loadDataToModel(QVector<QVector<QVariant>>& data);
     bool downloadDataFromModel(QVector<QVector<QVariant>>& container) const;
 

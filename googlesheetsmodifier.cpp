@@ -13,6 +13,7 @@ GoogleSheetsModifier::GoogleSheetsModifier(QWidget *parent) :
     select_model = ui->tableGoogleSheets->selectionModel();
     ui->tableGoogleSheets->setDragDropMode(QAbstractItemView::InternalMove);
     ui->tableGoogleSheets->setDragDropOverwriteMode(false);
+    ui->tableGoogleSheets->setDefaultDropAction(Qt::MoveAction);
     communicator = new HTTPScommunicator();
     radButGroup.addButton(ui->radioButtonAPI_key);
     radButGroup.addButton(ui->radioButton_OAuth2);
