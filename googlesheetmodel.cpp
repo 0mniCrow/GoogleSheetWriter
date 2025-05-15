@@ -279,7 +279,96 @@ QStringList GoogleSheetModel::mimeTypes() const
 {
     QStringList mT;
     mT.append(QString::fromLatin1("application/vnd.text.list"));
+    mT.append(QString::fromLatin1("application/x-localMovedRow"));
+    mT.append(QString::fromLatin1("application/x-localModedColumn"));
+
     return mT;
+}
+
+
+
+QMimeData* GoogleSheetModel::mimeData(const QModelIndexList& indexes) const
+{
+    QMultiMap<int,int> addrmap;
+    //Сартаванне вылучаных элементаў у выгляд табліцы
+    foreach(const QModelIndex& index, indexes)
+    {
+        if(index.isValid())
+        {
+            addrmap.insert(index.row(),index.column());
+        }
+    } 
+    if(dataHolder.isEmpty()||addrmap.isEmpty())
+    {
+        return nullptr;
+    }
+    QList<int> rows = addrmap.uniqueKeys();
+    int adjustment = addrmap.count(addrmap.firstKey());
+
+    //Рэгуляванне даўжыні вылучаных элементаў (шэраг/слупок)
+    foreach(const int row, rows)
+    {
+        if(addrmap.count(row)!=adjustment)
+        {
+            return nullptr;
+        }
+    }
+    //Праверка, ці не вылучана табліца цалкам
+    bool rowsSelected = adjustment==dataHolder.at(0).size();
+    bool columnsSelected = rows.size()==dataHolder.size();
+    if(rowsSelected&&columnsSelected)
+    {
+        return nullptr;
+    }
+    //Запаўненьне кантэйнера на перадачу вылучанымі элементамі з табліцы
+    QVector<QVector<QVariant>> sentData;
+    foreach(const int row, rows)
+    {
+        QVector<QVariant> sentRow;
+        QList<int> columns = addrmap.values(row);
+        std::sort(columns.begin(),columns.end());
+        foreach(const int column,columns)
+        {
+            sentRow.append(dataHolder.at(row).at(column));
+        }
+        sentData.append(sentRow);
+    }
+    QString coding;
+    if(columnsSelected)
+    {
+        coding = QString::fromLatin1("application/x-localModedColumn");
+    }
+    else if(rowsSelected)
+    {
+        coding = QString::fromLatin1("application/x-localMovedRow");
+    }
+    else
+    {
+        return nullptr;
+    }
+
+    QByteArray encoded;
+    QDataStream stream(&encoded, QIODevice::WriteOnly);
+    foreach(const QVector<QVariant>& dataRow,sentData)
+    {
+        foreach(const QVariant& cell,dataRow)
+        {
+            stream<<cell;
+        }
+        QString endSeq(";-nn-;");
+        stream<<QVariant(endSeq);
+    }
+//    foreach(const QModelIndex& index, indexes)
+//    {
+//        if(index.isValid())
+//        {
+//            QString val(this->data(index,Qt::DisplayRole).toString());
+//            stream<<val;
+//        }
+//    }
+    QMimeData* mimeData = new QMimeData();
+    mimeData->setData(/*"application/vnd.text.list"*/coding,encoded);
+    return mimeData;
 }
 
 bool GoogleSheetModel::dropMimeData(const QMimeData* data, Qt::DropAction action,
@@ -287,58 +376,136 @@ bool GoogleSheetModel::dropMimeData(const QMimeData* data, Qt::DropAction action
 {
     if(action == Qt::IgnoreAction)
     {
+        return true;
+    }
+    if(!data)
+    {
         return false;
     }
-    int beginRow = 0;
-    if(row!=-1)
-    {
-        beginRow = row;
-    }
-    else if(parent.isValid())
-    {
-        beginRow = parent.row();
-    }
-    else
-    {
-        beginRow = rowCount(QModelIndex());
-    }
-    QByteArray encoded = data->data("application/vnd.text.list");
-    QDataStream stream(&encoded,QIODevice::ReadOnly);
-    QStringList items;
-    int rows = 0;
 
-    while(!stream.atEnd())
+    if(data->hasFormat("application/x-localMovedRow"))
     {
-        QString text;
-        stream>>text;
-        items<<text;
-        ++rows;
-    }
-    insertRows(beginRow,rows,QModelIndex());
-    for(const QString& text : qAsConst(items))
-    {
-        QModelIndex idx = index(beginRow,0,QModelIndex());
-        setData(idx,text,Qt::EditRole);
-        beginRow++;
-    }
-    return true;
-}
-
-QMimeData*  GoogleSheetModel::mimeData(const QModelIndexList& indexes) const
-{
-    QMimeData* mimeData = new QMimeData();
-    QByteArray encoded;
-    QDataStream stream(&encoded, QIODevice::WriteOnly);
-    foreach(const QModelIndex& index, indexes)
-    {
-        if(index.isValid())
+        int beginRow = 0;
+        if(row!=-1)
         {
-            QString val(this->data(index,Qt::DisplayRole).toString());
-            stream<<val;
+            beginRow = row;
+        }
+        else if(parent.isValid())
+        {
+            beginRow = parent.row();
+        }
+        else
+        {
+            beginRow = rowCount(QModelIndex());
+        }
+        QByteArray encoded = data->data("application/x-localMovedRow");
+        QDataStream stream(&encoded,QIODevice::ReadOnly);
+        QVector<QVector<QVariant>> readData;
+        QVector<QVariant> readRow;
+        while(!stream.atEnd())
+        {
+            QVariant cell;
+            stream>>cell;
+            if(QString(cell.typeName())=="QString")
+            {
+                if(cell.toString()==";-nn-;")
+                {
+                    readData.append(readRow);
+                    readRow.clear();
+                    continue;
+                }
+            }
+            readRow.append(cell);
+        }
+        insertRows(beginRow,readData.size(),QModelIndex());
+        for(int rowindex = 0; rowindex<readData.size();rowindex++)
+        {
+            for(int colindex = 0; colindex<readData.at(rowindex).size();colindex++)
+            {
+                QModelIndex idx = index(rowindex+beginRow,colindex,QModelIndex());
+                setData(idx,readData.at(rowindex).at(colindex),Qt::EditRole);
+            }
         }
     }
-    mimeData->setData("application/vnd.text.list",encoded);
-    return mimeData;
+    else if(data->hasFormat("application/x-localModedColumn"))
+    {
+        int beginColumn = 0;
+        if(row!=-1)
+        {
+            beginColumn = column;
+        }
+        else if(parent.isValid())
+        {
+            beginColumn = parent.column();
+        }
+        else
+        {
+            beginColumn = columnCount(QModelIndex());
+        }
+        QByteArray encoded = data->data("application/x-localModedColumn");
+        QDataStream stream(&encoded,QIODevice::ReadOnly);
+        QVector<QVector<QVariant>> readData;
+        QVector<QVariant> readRow;
+        while(!stream.atEnd())
+        {
+            QVariant cell;
+            stream>>cell;
+            if(QString(cell.typeName())=="QString")
+            {
+                if(cell.toString()==";-nn-;")
+                {
+                    readData.append(readRow);
+                    readRow.clear();
+                    continue;
+                }
+            }
+            readRow.append(cell);
+        }
+        insertColumns(beginColumn,readData.at(0).size(),QModelIndex());
+        for(int rowindex = 0; rowindex<readData.size();rowindex++)
+        {
+            for(int colindex = 0; colindex<readData.at(rowindex).size();colindex++)
+            {
+                QModelIndex idx = index(rowindex,colindex+beginColumn,QModelIndex());
+                setData(idx,readData.at(rowindex).at(colindex),Qt::EditRole);
+            }
+        }
+    }
+    return true;
+//    int beginRow = 0;
+//    if(row!=-1)
+//    {
+//        beginRow = row;
+//    }
+//    else if(parent.isValid())
+//    {
+//        beginRow = parent.row();
+//    }
+//    else
+//    {
+//        beginRow = rowCount(QModelIndex());
+//    }
+//    QByteArray encoded = data->data("application/vnd.text.list");
+//    QDataStream stream(&encoded,QIODevice::ReadOnly);
+//    QStringList items;
+//    int rows = 0;
+
+//    while(!stream.atEnd())
+//    {
+//        QString text;
+//        stream>>text;
+//        items<<text;
+//        ++rows;
+//    }
+//    //! напэўна тут трэба карыстацца moveRows з moveColumns
+//    insertRows(beginRow,rows,QModelIndex());
+//    for(const QString& text : qAsConst(items))
+//    {
+//        QModelIndex idx = index(beginRow,0,QModelIndex());
+//        setData(idx,text,Qt::EditRole);
+//        beginRow++;
+//    }
+//    return true;
 }
 
 bool GoogleSheetModel::moveRows(const QModelIndex& sourceParent, int sourceRow, int count,
@@ -348,7 +515,12 @@ bool GoogleSheetModel::moveRows(const QModelIndex& sourceParent, int sourceRow, 
     {
         return false;
     }
-    dataHolder.swapItemsAt(sourceRow,destChild);
+    for(int i = 0; i<count;i++)
+    {
+        dataHolder.insert(destChild+i,dataHolder.at(sourceRow));
+        int removeIndex = destChild>sourceRow?sourceRow:sourceRow+1;
+        dataHolder.removeAt(removeIndex);
+    }
     endMoveRows();
     return true;
 }
@@ -359,9 +531,14 @@ bool GoogleSheetModel::moveColumns(const QModelIndex& sourceParent, int sourceCo
     {
         return false;
     }
-    for(int i = 0; i<dataHolder.size(); i++)
+    for(QVector<QVariant>& row:dataHolder)
     {
-        dataHolder[i].swapItemsAt(sourceColumn,destChild);
+        for(int i = 0; i<count;i++)
+        {
+            row.insert(destChild+i,row.at(sourceColumn));
+            int removeIndex = destChild>sourceColumn?sourceColumn:sourceColumn+1;
+            row.removeAt(removeIndex);
+        }
     }
     endMoveColumns();
     return true;

@@ -7,6 +7,8 @@
 #include <QMimeData>
 #include <QDataStream>
 #include <QIODevice>
+#include <QMap>
+#include <QMultiMap>
 #include <QColor>
 #define ROWS 6
 #define COLUMNS 5
