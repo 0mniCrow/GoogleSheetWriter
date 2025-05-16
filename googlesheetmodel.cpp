@@ -472,40 +472,6 @@ bool GoogleSheetModel::dropMimeData(const QMimeData* data, Qt::DropAction action
         }
     }
     return true;
-//    int beginRow = 0;
-//    if(row!=-1)
-//    {
-//        beginRow = row;
-//    }
-//    else if(parent.isValid())
-//    {
-//        beginRow = parent.row();
-//    }
-//    else
-//    {
-//        beginRow = rowCount(QModelIndex());
-//    }
-//    QByteArray encoded = data->data("application/vnd.text.list");
-//    QDataStream stream(&encoded,QIODevice::ReadOnly);
-//    QStringList items;
-//    int rows = 0;
-
-//    while(!stream.atEnd())
-//    {
-//        QString text;
-//        stream>>text;
-//        items<<text;
-//        ++rows;
-//    }
-//    //! напэўна тут трэба карыстацца moveRows з moveColumns
-//    insertRows(beginRow,rows,QModelIndex());
-//    for(const QString& text : qAsConst(items))
-//    {
-//        QModelIndex idx = index(beginRow,0,QModelIndex());
-//        setData(idx,text,Qt::EditRole);
-//        beginRow++;
-//    }
-//    return true;
 }
 
 bool GoogleSheetModel::moveRows(const QModelIndex& sourceParent, int sourceRow, int count,
