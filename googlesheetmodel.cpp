@@ -321,43 +321,51 @@ QMimeData* GoogleSheetModel::mimeData(const QModelIndexList& indexes) const
         return nullptr;
     }
     //Запаўненьне кантэйнера на перадачу вылучанымі элементамі з табліцы
-    QVector<QVector<QVariant>> sentData;
-    foreach(const int row, rows)
-    {
-        QVector<QVariant> sentRow;
-        QList<int> columns = addrmap.values(row);
-        std::sort(columns.begin(),columns.end());
-        foreach(const int column,columns)
-        {
-            sentRow.append(dataHolder.at(row).at(column));
-        }
-        sentData.append(sentRow);
-    }
+    QByteArray encoded;
     QString coding;
-    if(columnsSelected)
+    if(rowsSelected)
+    {
+        QVector<QVector<QVariant>> sentData;
+        coding = QString::fromLatin1("application/x-localMovedRow");
+        foreach(const int row, rows)
+        {
+            QVector<QVariant> sentRow;
+            QList<int> columns = addrmap.values(row);
+            std::sort(columns.begin(),columns.end());
+            foreach(const int column,columns)
+            {
+                sentRow.append(dataHolder.at(row).at(column));
+            }
+            sentData.append(sentRow);
+        }
+        QDataStream stream(&encoded, QIODevice::WriteOnly);
+        foreach(const QVector<QVariant>& dataRow,sentData)
+        {
+            foreach(const QVariant& cell,dataRow)
+            {
+                stream<<cell;
+            }
+            QString endSeq(";-nn-;");
+            stream<<QVariant(endSeq);
+        }
+    }
+    else if(columnsSelected)
     {
         coding = QString::fromLatin1("application/x-localModedColumn");
-    }
-    else if(rowsSelected)
-    {
-        coding = QString::fromLatin1("application/x-localMovedRow");
+        QList<int> columns = addrmap.values(rows.at(0));
+        std::sort(columns.begin(),columns.end());
+        QDataStream stream(&encoded, QIODevice::WriteOnly);
+        foreach(const int column,columns)
+        {
+            stream<<QVariant(column);
+        }
     }
     else
     {
         return nullptr;
     }
+    //QByteArray encoded;
 
-    QByteArray encoded;
-    QDataStream stream(&encoded, QIODevice::WriteOnly);
-    foreach(const QVector<QVariant>& dataRow,sentData)
-    {
-        foreach(const QVariant& cell,dataRow)
-        {
-            stream<<cell;
-        }
-        QString endSeq(";-nn-;");
-        stream<<QVariant(endSeq);
-    }
 //    foreach(const QModelIndex& index, indexes)
 //    {
 //        if(index.isValid())
@@ -444,6 +452,44 @@ bool GoogleSheetModel::dropMimeData(const QMimeData* data, Qt::DropAction action
         }
         QByteArray encoded = data->data("application/x-localModedColumn");
         QDataStream stream(&encoded,QIODevice::ReadOnly);
+        QList<int> sourceColumns;
+        while(!stream.atEnd())
+        {
+            QVariant cell;
+            stream>>cell;
+            sourceColumns.append(cell.toInt());
+        }
+
+        int count = 1;
+        int moveShift = 0;
+        int sourceColumn = -1;
+        for(int i = 0; i<sourceColumns.size();i++)
+        {
+            if(sourceColumn==-1)
+            {
+                sourceColumn = sourceColumns.at(i);
+            }
+            else if(sourceColumns.at(i)!=(sourceColumn+count-1))
+            {
+                moveColumns(QModelIndex(),sourceColumn+moveShift,count,QModelIndex(),beginColumn);
+                if(beginColumn<sourceColumn)
+                {
+                    moveShift+=count;
+                }
+                sourceColumn = sourceColumns.at(i);
+                count = 1;
+            }
+
+            if(sourceColumns.size()==(i+1))
+            {
+                moveColumns(QModelIndex(),sourceColumn,count,QModelIndex(),beginColumn);
+            }
+            else
+            {
+                count++;
+            }
+        }
+        /*
         QVector<QVector<QVariant>> readData;
         QVector<QVariant> readRow;
         while(!stream.atEnd())
@@ -470,6 +516,7 @@ bool GoogleSheetModel::dropMimeData(const QMimeData* data, Qt::DropAction action
                 setData(idx,readData.at(rowindex).at(colindex),Qt::EditRole);
             }
         }
+        */
     }
     return true;
 }
@@ -501,8 +548,8 @@ bool GoogleSheetModel::moveColumns(const QModelIndex& sourceParent, int sourceCo
     {
         for(int i = 0; i<count;i++)
         {
-            row.insert(destChild+i,row.at(sourceColumn));
-            int removeIndex = destChild>sourceColumn?sourceColumn:sourceColumn+1;
+            row.insert(destChild>sourceColumn?destChild:destChild+i,row.at(destChild>sourceColumn?sourceColumn:sourceColumn+i));
+            int removeIndex = destChild>sourceColumn?sourceColumn:sourceColumn+1+i;
             row.removeAt(removeIndex);
         }
     }
