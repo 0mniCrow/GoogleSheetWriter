@@ -315,6 +315,13 @@
       </spacer>
      </item>
      <item>
+      <widget class="QCheckBox" name="checkBox_FlashChanges">
+       <property name="text">
+        <string>Flash changes</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="Button_Save_settings">
        <property name="text">
         <string>Save settings</string>

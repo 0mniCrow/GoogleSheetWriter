@@ -20,6 +20,7 @@ class GoogleSheetModel:public QAbstractTableModel
 private:
     QVector<QVector<QVariant>> dataHolder;
     QVector<QVector<QVariant>> loadedData;
+    bool flashChanges;
     bool checkIndex(const QModelIndex& index) const;
 public:
     GoogleSheetModel(QObject * tata = nullptr);
@@ -46,7 +47,7 @@ public:
     QMimeData*  mimeData(const QModelIndexList& indexex) const override;
     bool loadDataToModel(QVector<QVector<QVariant>>& data);
     bool downloadDataFromModel(QVector<QVector<QVariant>>& container) const;
-
+    void setChangesToFlash(bool parameter);
 };
 
 #endif // GOOGLESHEETMODEL_H

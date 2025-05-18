@@ -9,12 +9,21 @@ GoogleSheetModel::GoogleSheetModel(QObject *tata):QAbstractTableModel(tata)
         dataHolder[i].resize(COLUMNS);
         loadedData[i].resize(COLUMNS);
     }
+    flashChanges = false;
     return;
 }
 
 GoogleSheetModel::~GoogleSheetModel()
 {
     //?
+}
+
+void GoogleSheetModel::setChangesToFlash(bool parameter)
+{
+    //Каб падсветка запрацавала імгненна, абвяшчаем мадель, што ўсе налады скідваюцца
+    beginResetModel();
+    flashChanges = parameter;
+    endResetModel();
 }
 
 bool GoogleSheetModel::checkIndex(const QModelIndex& index) const
@@ -46,18 +55,21 @@ QVariant GoogleSheetModel::data(const QModelIndex &index, int role) const
     }
     else if(role==Qt::BackgroundRole)
     {
-        QVariant dataInfo(dataHolder.at(index.row()).at(index.column()));
-
-        if(!dataInfo.isNull())
+        if(flashChanges)
         {
-            if(index.row()<loadedData.size())
+            QVariant dataInfo(dataHolder.at(index.row()).at(index.column()));
+
+            if(!dataInfo.isNull())                      //Калі вуза не пустая
             {
-                if(index.column()<loadedData.at(index.row()).size())
-                {
-                    QVariant loadedInfo(loadedData.at(index.row()).at(index.column()));
-                    if(dataInfo!=loadedInfo)
-                    {
-                        return QColor(247,111,111);
+                if(index.row()<loadedData.size())       //Калі індэкс запытваемай вузы меньш за даўжыню табліцы,
+                {                                       //папярэдне запампованай з сервера
+                    if(index.column()<loadedData.at(index.row()).size())    //Калі індэкс вузы меньш за шырыню
+                    {                                                       //табліцы, запампованай з сервера
+                        QVariant loadedInfo(loadedData.at(index.row()).at(index.column()));
+                        if(dataInfo!=loadedInfo)        //Калі дадзеныя ў галоўнай табліцы адрозніваюцца ад
+                        {                               //дадзеных у табліцы, запампованай з сервера
+                            return QColor(247,111,111); //Фарбуем шпалеры гэтай вузы ў чырвоны колер
+                        }
                     }
                 }
             }
@@ -224,7 +236,7 @@ bool GoogleSheetModel::loadDataToModel(QVector<QVector<QVariant>>& data)
     {
         removeRows(0,dataHolder.size()-loadedData.size(),QModelIndex());
     }
-    if(loadedData.size())
+    if(loadedData.size())       //Наладжваецца памер галоўнай табліцы адносна да запампованай
     {
         if(dataHolder.size())
         {
@@ -325,6 +337,8 @@ QMimeData* GoogleSheetModel::mimeData(const QModelIndexList& indexes) const
     QString coding;
     if(rowsSelected)
     {
+        //Калі адзначана, што рухаюцца шэрагі, кантэйнер напаўняецца
+        //дадзеннымі, якія трэба ўставіць у новае месца
         QVector<QVector<QVariant>> sentData;
         coding = QString::fromLatin1("application/x-localMovedRow");
         foreach(const int row, rows)
@@ -351,6 +365,8 @@ QMimeData* GoogleSheetModel::mimeData(const QModelIndexList& indexes) const
     }
     else if(columnsSelected)
     {
+        //Калі высвятлілася, што рухаюцца слупкі, кантэйнер запаўняецца
+        //нумарамі слупкоў, якія рухаюцьмуць.
         coding = QString::fromLatin1("application/x-localModedColumn");
         QList<int> columns = addrmap.values(rows.at(0));
         std::sort(columns.begin(),columns.end());
@@ -364,16 +380,6 @@ QMimeData* GoogleSheetModel::mimeData(const QModelIndexList& indexes) const
     {
         return nullptr;
     }
-    //QByteArray encoded;
-
-//    foreach(const QModelIndex& index, indexes)
-//    {
-//        if(index.isValid())
-//        {
-//            QString val(this->data(index,Qt::DisplayRole).toString());
-//            stream<<val;
-//        }
-//    }
     QMimeData* mimeData = new QMimeData();
     mimeData->setData(/*"application/vnd.text.list"*/coding,encoded);
     return mimeData;
@@ -394,16 +400,16 @@ bool GoogleSheetModel::dropMimeData(const QMimeData* data, Qt::DropAction action
     if(data->hasFormat("application/x-localMovedRow"))
     {
         int beginRow = 0;
-        if(row!=-1)
-        {
+        if(row!=-1)             //Калі нумар шэрага можна выкарыстаць
+        {                       //задаем яго, як пачатковы для ўстаўкі
             beginRow = row;
         }
-        else if(parent.isValid())
-        {
+        else if(parent.isValid())   //Калі карыстальнік "кідае" шэраг на іншы шэраг
+        {                           //мы вызначаем індэкс гэтага "бацькі" як пачатковы
             beginRow = parent.row();
         }
-        else
-        {
+        else                        //Калі нельга атрымаць індэкс, пачатковым шэрагам
+        {                           //лічыцца канец табліцы
             beginRow = rowCount(QModelIndex());
         }
         QByteArray encoded = data->data("application/x-localMovedRow");
@@ -548,7 +554,8 @@ bool GoogleSheetModel::moveColumns(const QModelIndex& sourceParent, int sourceCo
     {
         for(int i = 0; i<count;i++)
         {
-            row.insert(destChild>sourceColumn?destChild:destChild+i,row.at(destChild>sourceColumn?sourceColumn:sourceColumn+i));
+            row.insert(destChild>sourceColumn?destChild:destChild+i,
+                       row.at(destChild>sourceColumn?sourceColumn:sourceColumn+i));
             int removeIndex = destChild>sourceColumn?sourceColumn:sourceColumn+1+i;
             row.removeAt(removeIndex);
         }

@@ -38,6 +38,7 @@ GoogleSheetsModifier::GoogleSheetsModifier(QWidget *parent) :
     connect(ui->radioButton_OAuth2,SIGNAL(clicked(bool)),this,SLOT(checkRadioGroup()));
     connect(ui->Button_Save_settings,SIGNAL(clicked(bool)),this,SLOT(saveSettings()));
     connect(ui->Button_LoadSettings,SIGNAL(clicked(bool)),this,SLOT(loadSettings()));
+    connect(ui->checkBox_FlashChanges,SIGNAL(stateChanged(int)),this,SLOT(setChangesFlash()));
     loadSettings();
     return;
 }
@@ -55,6 +56,7 @@ GoogleSheetsModifier::~GoogleSheetsModifier()
     }
     return;
 }
+
 void GoogleSheetsModifier::setProgressBar(qint64 val,qint64 total)
 {
     ui->progressBar->setValue(val*100/total);
@@ -412,6 +414,7 @@ void GoogleSheetsModifier::saveSettings()
     settings.append("LastDirectoryPath:"+filemanager.getlastfilepath());
     settings.append(QString("API_Key_method:")+(ui->radioButtonAPI_key->isChecked()?"Y":"N"));
     settings.append(QString("OAuth2_method:")+(ui->radioButton_OAuth2->isChecked()?"Y":"N"));
+    settings.append(QString("Flash_Changes:")+(ui->checkBox_FlashChanges->isChecked()?"Y":"N"));
     if(!filemanager.savePreferences(settings))
     {
         getErrMsg("Application can't save settings;");
@@ -471,7 +474,24 @@ void GoogleSheetsModifier::loadSettings()
                 ui->radioButton_OAuth2->setChecked(false);
             }
         }
+        else if(str.contains("Flash_Changes:"))
+        {
+            if(str.sliced(str.indexOf(':')+1)=="Y")
+            {
+                ui->checkBox_FlashChanges->setChecked(true);
+            }
+            else
+            {
+                ui->checkBox_FlashChanges->setChecked(false);
+            }
+        }
         checkRadioGroup();
+        setChangesFlash();
     }
     return;
+}
+
+void GoogleSheetsModifier::setChangesFlash()
+{
+    model->setChangesToFlash(ui->checkBox_FlashChanges->isChecked());
 }
