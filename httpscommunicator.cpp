@@ -105,7 +105,7 @@ void HTTPScommunicator::writeRequest(const QString& SSID, const QString& SSname,
         emit errormsg("Writing to server Error: OAuth2 communication hasn't been authorized;");
         return;
     }
-    if(!communicator/*_put*/)
+    if(!communicator)
     {
         emit errormsg("Writing to server Error: Communicator doesn't exist;");
         return;
@@ -140,11 +140,11 @@ void HTTPScommunicator::writeRequest(const QString& SSID, const QString& SSname,
     QNetworkReply * reply = nullptr;
     if(httpflags&GoogleSheetsAppendMode)
     {
-        reply = communicator/*_put*/->post(request,data);
+        reply = communicator->post(request,data);
     }
     else
     {
-        reply = communicator/*_put*/->put(request,data);
+        reply = communicator->put(request,data);
     }
     connect(reply,SIGNAL(downloadProgress(qint64,qint64)),this,SIGNAL(progress(qint64,qint64)));
     return;

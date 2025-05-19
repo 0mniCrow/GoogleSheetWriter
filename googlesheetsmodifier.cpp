@@ -18,6 +18,7 @@ GoogleSheetsModifier::GoogleSheetsModifier(QWidget *parent) :
     radButGroup.addButton(ui->radioButtonAPI_key);
     radButGroup.addButton(ui->radioButton_OAuth2);
     checkRadioGroup();
+    setWriteOption();
     connect(ui->ButtonAddColumn,SIGNAL(clicked(bool)),this,SLOT(addColumn()));
     connect(ui->ButtonAddRow,SIGNAL(clicked(bool)),this,SLOT(addRow()));
     connect(ui->ButtonRemoveColumn,SIGNAL(clicked(bool)),this,SLOT(removeColumn()));
@@ -39,6 +40,8 @@ GoogleSheetsModifier::GoogleSheetsModifier(QWidget *parent) :
     connect(ui->Button_Save_settings,SIGNAL(clicked(bool)),this,SLOT(saveSettings()));
     connect(ui->Button_LoadSettings,SIGNAL(clicked(bool)),this,SLOT(loadSettings()));
     connect(ui->checkBox_FlashChanges,SIGNAL(stateChanged(int)),this,SLOT(setChangesFlash()));
+    connect(ui->radioButton_option_append,SIGNAL(clicked(bool)),this,SLOT(setWriteOption()));
+    connect(ui->radioButton_option_rewrite,SIGNAL(clicked(bool)),this,SLOT(setWriteOption()));
     loadSettings();
     return;
 }
@@ -391,6 +394,7 @@ void GoogleSheetsModifier::checkRadioGroup()
         ui->groupBox_API_KEY->setEnabled(true);
         ui->groupBox_OAuth2->setEnabled(false);
         ui->ButtonWrite->setEnabled(false);
+        ui->groupBox_write_option->setEnabled(false);
         communicator->setFlags(communicator->getFlags()&(~HTTPScommunicator::oauth2Method));
     }
     else if(ui->radioButton_OAuth2->isChecked())
@@ -398,6 +402,7 @@ void GoogleSheetsModifier::checkRadioGroup()
         ui->groupBox_OAuth2->setEnabled(true);
         ui->groupBox_API_KEY->setEnabled(false);
         ui->ButtonWrite->setEnabled(true);
+        ui->groupBox_write_option->setEnabled(true);
         communicator->setFlags(communicator->getFlags()|HTTPScommunicator::oauth2Method);
     }
     return;
@@ -415,6 +420,8 @@ void GoogleSheetsModifier::saveSettings()
     settings.append(QString("API_Key_method:")+(ui->radioButtonAPI_key->isChecked()?"Y":"N"));
     settings.append(QString("OAuth2_method:")+(ui->radioButton_OAuth2->isChecked()?"Y":"N"));
     settings.append(QString("Flash_Changes:")+(ui->checkBox_FlashChanges->isChecked()?"Y":"N"));
+    settings.append(QString("Write_rewrite_opt:")+(ui->radioButton_option_rewrite->isChecked()?"Y":"N"));
+    settings.append(QString("Write_append_opt:")+(ui->radioButton_option_append->isChecked()?"Y":"N"));
     if(!filemanager.savePreferences(settings))
     {
         getErrMsg("Application can't save settings;");
@@ -485,8 +492,31 @@ void GoogleSheetsModifier::loadSettings()
                 ui->checkBox_FlashChanges->setChecked(false);
             }
         }
+        else if(str.contains("Write_rewrite_opt:"))
+        {
+            if(str.sliced(str.indexOf(':')+1)=="Y")
+            {
+                ui->radioButton_option_rewrite->setChecked(true);
+            }
+            else
+            {
+                ui->radioButton_option_rewrite->setChecked(false);
+            }
+        }
+        else if(str.contains("Write_append_opt:"))
+        {
+            if(str.sliced(str.indexOf(':')+1)=="Y")
+            {
+                ui->radioButton_option_append->setChecked(true);
+            }
+            else
+            {
+                ui->radioButton_option_append->setChecked(false);
+            }
+        }
         checkRadioGroup();
         setChangesFlash();
+        setWriteOption();
     }
     return;
 }
@@ -494,4 +524,17 @@ void GoogleSheetsModifier::loadSettings()
 void GoogleSheetsModifier::setChangesFlash()
 {
     model->setChangesToFlash(ui->checkBox_FlashChanges->isChecked());
+}
+
+void GoogleSheetsModifier::setWriteOption()
+{
+    if(ui->radioButton_option_append->isChecked())
+    {
+        communicator->setFlags(communicator->getFlags()|HTTPScommunicator::GoogleSheetsAppendMode);
+    }
+    else if(ui->radioButton_option_rewrite->isChecked())
+    {
+        communicator->setFlags(communicator->getFlags()&(~HTTPScommunicator::GoogleSheetsAppendMode));
+    }
+    return;
 }

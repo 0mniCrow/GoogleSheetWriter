@@ -56,6 +56,7 @@ private slots:
 
     void checkRadioGroup();
     void setChangesFlash();
+    void setWriteOption();
 
 private:
     Ui::GoogleSheetsModifier *ui;
