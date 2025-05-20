@@ -12,6 +12,7 @@
 #include <QRadioButton>
 #include <QButtonGroup>
 #include <QPalette>
+#include <QKeyEvent>
 
 namespace Ui {
 class GoogleSheetsModifier;
@@ -28,6 +29,9 @@ private:
     JSONparser parser;
     FileManager filemanager;
     bool checkFields();
+protected:
+    void keyPressEvent(QKeyEvent * event) override;
+    void keyReleaseEvent(QKeyEvent * event) override;
 public:
     explicit GoogleSheetsModifier(QWidget *parent = 0);
     ~GoogleSheetsModifier();

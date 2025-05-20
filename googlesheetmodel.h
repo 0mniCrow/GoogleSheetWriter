@@ -20,7 +20,9 @@ class GoogleSheetModel:public QAbstractTableModel
 private:
     QVector<QVector<QVariant>> dataHolder;
     QVector<QVector<QVariant>> loadedData;
+    QMultiMap<int,int> selectedCells;
     bool flashChanges;
+    bool controlModifier;
     bool checkIndex(const QModelIndex& index) const;
 public:
     GoogleSheetModel(QObject * tata = nullptr);
@@ -48,6 +50,9 @@ public:
     bool loadDataToModel(QVector<QVector<QVariant>>& data);
     bool downloadDataFromModel(QVector<QVector<QVariant>>& container) const;
     void setChangesToFlash(bool parameter);
+    void setControlModifier(bool controlmod);
+public slots:
+    void setNewSelectedIndex(QModelIndex selectedIndex);
 };
 
 #endif // GOOGLESHEETMODEL_H

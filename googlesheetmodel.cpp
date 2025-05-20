@@ -10,6 +10,7 @@ GoogleSheetModel::GoogleSheetModel(QObject *tata):QAbstractTableModel(tata)
         loadedData[i].resize(COLUMNS);
     }
     flashChanges = false;
+    controlModifier=false;
     return;
 }
 
@@ -55,10 +56,14 @@ QVariant GoogleSheetModel::data(const QModelIndex &index, int role) const
     }
     else if(role==Qt::BackgroundRole)
     {
-        if(flashChanges)
+        QMultiMap<int,int>::const_iterator it = selectedCells.find(index.row(),index.column());
+        if(it!=selectedCells.constEnd())
+        {                                           //Калі элемент выбраны з клавішай Ctrl
+            return QColor(255,253,158);             //ён трапляе ў спіс на індывідуальны запіс
+        }
+        else if(flashChanges)
         {
             QVariant dataInfo(dataHolder.at(index.row()).at(index.column()));
-
             if(!dataInfo.isNull())                      //Калі вуза не пустая
             {
                 if(index.row()<loadedData.size())       //Калі індэкс запытваемай вузы меньш за даўжыню табліцы,
@@ -74,6 +79,7 @@ QVariant GoogleSheetModel::data(const QModelIndex &index, int role) const
                 }
             }
         }
+
         return QVariant();
     }
     return QVariant();
@@ -562,4 +568,28 @@ bool GoogleSheetModel::moveColumns(const QModelIndex& sourceParent, int sourceCo
     }
     endMoveColumns();
     return true;
+}
+
+void GoogleSheetModel::setControlModifier(bool controlmod)
+{
+    controlModifier = controlmod;
+    return;
+}
+
+void GoogleSheetModel::setNewSelectedIndex(QModelIndex selectedIndex)
+{
+    if(controlModifier)
+    {
+        QMultiMap<int,int>::const_iterator it = selectedCells.find(selectedIndex.row(),selectedIndex.column());
+        if(it==selectedCells.constEnd())
+        {
+            selectedCells.insert(selectedIndex.row(),selectedIndex.column());
+        }
+        else
+        {
+            selectedCells.erase(it);
+        }
+        emit dataChanged(selectedIndex,selectedIndex);
+    }
+    return;
 }

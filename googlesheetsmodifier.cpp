@@ -42,6 +42,7 @@ GoogleSheetsModifier::GoogleSheetsModifier(QWidget *parent) :
     connect(ui->checkBox_FlashChanges,SIGNAL(stateChanged(int)),this,SLOT(setChangesFlash()));
     connect(ui->radioButton_option_append,SIGNAL(clicked(bool)),this,SLOT(setWriteOption()));
     connect(ui->radioButton_option_rewrite,SIGNAL(clicked(bool)),this,SLOT(setWriteOption()));
+    connect(ui->tableGoogleSheets,SIGNAL(clicked(QModelIndex)),model,SLOT(setNewSelectedIndex(QModelIndex)));
     loadSettings();
     return;
 }
@@ -524,6 +525,7 @@ void GoogleSheetsModifier::loadSettings()
 void GoogleSheetsModifier::setChangesFlash()
 {
     model->setChangesToFlash(ui->checkBox_FlashChanges->isChecked());
+    return;
 }
 
 void GoogleSheetsModifier::setWriteOption()
@@ -535,6 +537,24 @@ void GoogleSheetsModifier::setWriteOption()
     else if(ui->radioButton_option_rewrite->isChecked())
     {
         communicator->setFlags(communicator->getFlags()&(~HTTPScommunicator::GoogleSheetsAppendMode));
+    }
+    return;
+}
+
+
+void GoogleSheetsModifier::keyPressEvent(QKeyEvent * event)
+{
+    if(event->key()==Qt::Key_Control)
+    {
+        model->setControlModifier(true);
+    }
+    return;
+}
+void GoogleSheetsModifier::keyReleaseEvent(QKeyEvent * event)
+{
+    if(event->key()==Qt::Key_Control)
+    {
+        model->setControlModifier(false);
     }
     return;
 }
