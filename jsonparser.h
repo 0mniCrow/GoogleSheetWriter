@@ -19,11 +19,11 @@ private:
     bool parseJSONAnswerToText(QJsonObject& mainObj, QString& container);
 public:
     JSONparser();
-
+    ~JSONparser();
+    enum answerType{ JSONerror = 0, JSONregularAns = 1, JSONwriteReport =2, JSONseparatedCell = 3 };
     bool parseDataToJSON(const QVector<QVector<QVariant>>& data, const QString& sheetName, QByteArray& container);
-    bool parseJSONToData(const QByteArray& data, QVector<QVector<QVariant>>& container);
-    //bool saveJsonToFile(const QByteArray& data, const QString& filename);
-    //bool loadJsonFromFile(QByteArray& container, const QString& filename);
+    answerType parseJSONToData(const QByteArray& data, QVector<QVector<QVariant>>& container);
+
     QString getLastError() const;
 
 };

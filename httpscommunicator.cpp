@@ -172,14 +172,27 @@ void HTTPScommunicator::readRequest(const QString& SSID, const QString& SSname,
             return;
         }
     }
-    QString urlstr("https://sheets.googleapis.com/v4/spreadsheets/"+SSID+"/values/"+SSname+"!"+range);
-    QUrl url(urlstr);
+    QString urlstr("https://sheets.googleapis.com/v4/spreadsheets/"+SSID+"/values");
     QUrlQuery query;
+    if(httpflags&w_r_SeparateCells)
+    {
+        urlstr.append(":batchGet");
+        QStringList vals(range.split(',', Qt::SkipEmptyParts));
+        for(QStringList::iterator it = vals.begin();it!=vals.end();it++)
+        {
+            query.addQueryItem("ranges",SSname+"!"+*it+":"+*it);
+        }
+    }
+    else
+    {
+        urlstr.append("/"+SSname+"!"+range);
+    }
+    QUrl url(urlstr);
     QNetworkRequest request;
     if(httpflags&oauth2Method)
     {
-//        query.addQueryItem("valueInputOption","USER_ENTERED");
-//        url.setQuery(query);
+        query.addQueryItem("valueInputOption","USER_ENTERED");
+        url.setQuery(query);
         request.setUrl(url);
         request.setHeader(QNetworkRequest::ContentTypeHeader,"application/json");
         request.setRawHeader("Expect", "");

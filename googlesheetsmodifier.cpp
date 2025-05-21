@@ -43,6 +43,7 @@ GoogleSheetsModifier::GoogleSheetsModifier(QWidget *parent) :
     connect(ui->radioButton_option_append,SIGNAL(clicked(bool)),this,SLOT(setWriteOption()));
     connect(ui->radioButton_option_rewrite,SIGNAL(clicked(bool)),this,SLOT(setWriteOption()));
     connect(ui->tableGoogleSheets,SIGNAL(clicked(QModelIndex)),model,SLOT(setNewSelectedIndex(QModelIndex)));
+    connect(ui->checkBox_Selected_cells_work,SIGNAL(clicked(bool)),this,SLOT(setSelectedCellsOptions()));
     loadSettings();
     return;
 }
@@ -360,31 +361,50 @@ void GoogleSheetsModifier::load()
                          this,"Load JSON file",lastpath,
                          "JSON (*.json)",nullptr,QFileDialog::DontUseNativeDialog));
     QByteArray JSONdata;
-    QVector<QVector<QVariant>> rawData;
+//    QVector<QVector<QVariant>> rawData;
     if(!filemanager.loadJSONdataFromFile(JSONdata,filename))
     {
         getErrMsg("Can't load JSON data from file ["+filename+"];");
         return;
     }
     filemanager.setlastfilepath(filename.left(filename.lastIndexOf('.')));
-    if(!parser.parseJSONToData(JSONdata,rawData))
-    {
-        getErrMsg(parser.getLastError());
-        return;
-    }
-    model->loadDataToModel(rawData);
+    getFinishedSignal(JSONdata);
+//    if(!parser.parseJSONToData(JSONdata,rawData))
+//    {
+//        getErrMsg(parser.getLastError());
+//        return;
+//    }
+//    model->loadDataToModel(rawData);
     return;
 }
 
 void GoogleSheetsModifier::getFinishedSignal(const QByteArray& data)
 {
     QVector<QVector<QVariant>> modelData;
-    if(!parser.parseJSONToData(data,modelData))
+    switch(parser.parseJSONToData(data,modelData))
+    {
+    case JSONparser::JSONerror:
+    case JSONparser::JSONwriteReport:
     {
         getErrMsg(parser.getLastError());
-        return;
     }
-    model->loadDataToModel(modelData);
+        break;
+    case JSONparser::JSONregularAns:
+    {
+        model->loadDataToModel(modelData);
+    }
+        break;
+    case JSONparser::JSONseparatedCell:
+    {
+        model->loadSeparatedData(modelData);
+    }
+        break;
+    default:
+    {
+        getErrMsg("This json flag is not processed!");
+    }
+    }
+
     return;
 }
 
@@ -555,6 +575,19 @@ void GoogleSheetsModifier::keyReleaseEvent(QKeyEvent * event)
     if(event->key()==Qt::Key_Control)
     {
         model->setControlModifier(false);
+    }
+    return;
+}
+
+void GoogleSheetsModifier::setSelectedCellsOptions()
+{
+    if(ui->checkBox_Selected_cells_work->isChecked())
+    {
+        communicator->setFlags(communicator->getFlags()|HTTPScommunicator::w_r_SeparateCells);
+    }
+    else
+    {
+        communicator->setFlags(communicator->getFlags()&(~HTTPScommunicator::w_r_SeparateCells));
     }
     return;
 }

@@ -277,6 +277,12 @@ bool GoogleSheetModel::loadDataToModel(QVector<QVector<QVariant>>& data)
     return true;
 }
 
+bool GoogleSheetModel::loadSeparatedData(QVector<QVector<QVariant>>& data)
+{
+
+    return true;
+}
+
 bool GoogleSheetModel::downloadDataFromModel(QVector<QVector<QVariant>>& container) const
 {
     container=dataHolder;

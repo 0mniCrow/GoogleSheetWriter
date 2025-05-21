@@ -244,6 +244,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QCheckBox" name="checkBox_Selected_cells_work">
+         <property name="text">
+          <string>Read(work with) only selected cells</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QGroupBox" name="groupBox_write_option">
          <property name="title">
           <string/>

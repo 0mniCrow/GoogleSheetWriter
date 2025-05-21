@@ -48,6 +48,7 @@ public:
                       int row, int column, const QModelIndex& parent) override;
     QMimeData*  mimeData(const QModelIndexList& indexex) const override;
     bool loadDataToModel(QVector<QVector<QVariant>>& data);
+    bool loadSeparatedData(QVector<QVector<QVariant>>& data);
     bool downloadDataFromModel(QVector<QVector<QVariant>>& container) const;
     void setChangesToFlash(bool parameter);
     void setControlModifier(bool controlmod);

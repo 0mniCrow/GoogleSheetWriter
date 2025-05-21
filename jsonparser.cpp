@@ -5,6 +5,11 @@ JSONparser::JSONparser()
 
 }
 
+JSONparser::~JSONparser()
+{
+
+}
+
 bool JSONparser::parseDataToJSON(const QVector<QVector<QVariant>>& data, const QString& sheetName, QByteArray& container)
 {
     if(!data.size())
@@ -60,19 +65,19 @@ bool JSONparser::parseDataToJSON(const QVector<QVector<QVariant>>& data, const Q
     return true;
 }
 
-bool JSONparser::parseJSONToData(const QByteArray& data, QVector<QVector<QVariant>>& container)
+JSONparser::answerType JSONparser::parseJSONToData(const QByteArray& data, QVector<QVector<QVariant>>& container)
 {
     if(data.isEmpty())
     {
         lastError = "Json answer is empty;";
-        return false;
+        return JSONerror;
     }
     QJsonParseError jsonErr;
     QJsonDocument mainDoc(QJsonDocument::fromJson(data,&jsonErr));
     if(jsonErr.error!=QJsonParseError::NoError)
     {
         lastError = jsonErr.errorString();
-        return false;
+        return JSONerror;
     }
 
 //    QString ermsg = mainDoc.toJson();
@@ -123,13 +128,19 @@ bool JSONparser::parseJSONToData(const QByteArray& data, QVector<QVector<QVarian
                 container[i].resize(maxcolumnsize);
             }
         }
+        return JSONregularAns;
+    }
+    else if(mainObj.contains("valueRanges"))
+    {
+
+        return JSONseparatedCell;
     }
     else
     {
         parseJSONAnswerToText(mainObj, lastError);
-        return false;
+        return JSONwriteReport;
     }
-    return true;
+    return JSONerror;
 }
 
 bool JSONparser::parseJSONAnswerToText(QJsonObject &mainObj, QString& container)
