@@ -11,6 +11,8 @@
 #include <QVariant>
 #include <QVector>
 #include <QFile>
+#include <QRegularExpression>
+#include <QRegularExpressionMatch>
 
 class JSONparser
 {

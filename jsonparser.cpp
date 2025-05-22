@@ -132,7 +132,66 @@ JSONparser::answerType JSONparser::parseJSONToData(const QByteArray& data, QVect
     }
     else if(mainObj.contains("valueRanges"))
     {
+        QJsonArray ranges(mainObj.value("valueRanges").toArray());
+        for(int i =0; i<ranges.size();i++)
+        {
+            int mainrow = 0;
+            int maincol = 0;
+            QJsonObject cell(ranges.at(i).toObject());
+            QRegularExpression exp("!([A-Z]+)(\\d+):([A-Z]+)(\\d+)");
+            QString range(cell.value("range").toString());
+            QJsonArray rows = cell.value("values").toArray();
+            QRegularExpressionMatch match = exp.match(range);
+            if(match.hasMatch())
+            {
+                QString startColLetter = match.captured(1);
+                QString startRowNum = match.captured(2);
+                QString endColLetter = match.captured(3);
+                QString endRowNum = match.captured(4);
+                char start = 'A';
+                int firstCol = 0;
+                int lastCol = 0;
+                foreach(const QChar ch, startColLetter)
+                {
+                    char next = ch.toLatin1();
+                    firstCol += std::abs(next - start);
+                }
+                foreach(const QChar ch, endColLetter)
+                {
+                    char next = ch.toLatin1();
+                    lastCol+= std::abs(next-start);
+                }
+                int firstRow = startRowNum.toInt();
+                int endRow = endRowNum.toInt();
+                if(container.size()<(firstRow+1))
+                {
+                    container.resize(firstRow);
+                }
+                while(firstRow<=endRow)
+                {
+                    container.append(QVector<QVariant>());
+                    for(QVector<QVariant>& row:container)
+                    {
+                        if(row.size()<(firstCol+1))
+                        {
+                            row.resize(firstCol);
+                        }
+                        while(firstCol<=lastCol)
+                        {
 
+                            firstCol++;
+                        }
+                    }
+                    firstRow++;
+                    mainrow++;
+                }
+
+            }
+            else
+            {
+                lastError="JSON Parser can't initialize string ["+range+"]";
+            }
+        }
         return JSONseparatedCell;
     }
     else
