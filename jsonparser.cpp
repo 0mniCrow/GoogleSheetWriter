@@ -135,12 +135,9 @@ JSONparser::answerType JSONparser::parseJSONToData(const QByteArray& data, QVect
         QJsonArray ranges(mainObj.value("valueRanges").toArray());
         for(int i =0; i<ranges.size();i++)
         {
-            int mainrow = 0;
-            int maincol = 0;
             QJsonObject cell(ranges.at(i).toObject());
             QRegularExpression exp("!([A-Z]+)(\\d+):([A-Z]+)(\\d+)");
             QString range(cell.value("range").toString());
-            QJsonArray rows = cell.value("values").toArray();
             QRegularExpressionMatch match = exp.match(range);
             if(match.hasMatch())
             {
@@ -162,34 +159,52 @@ JSONparser::answerType JSONparser::parseJSONToData(const QByteArray& data, QVect
                     lastCol+= std::abs(next-start);
                 }
                 int firstRow = startRowNum.toInt();
-                int endRow = endRowNum.toInt();
-                if(container.size()<(firstRow+1))
+                int lastRow = endRowNum.toInt();
+                if(container.size()<(lastRow+1))
                 {
-                    container.resize(firstRow);
+                    container.resize(lastRow+1);
                 }
-                while(firstRow<=endRow)
+                for(QVector<QVariant>& row:container)
                 {
-                    container.append(QVector<QVariant>());
-                    for(QVector<QVariant>& row:container)
+                    if(row.size()<(lastCol+1))
                     {
-                        if(row.size()<(firstCol+1))
+                        row.resize(lastCol+1);
+                    }
+                }
+                QJsonArray rows = cell.value("values").toArray();
+                for(int i = 0; i<rows.size();i++)
+                {
+                    QJsonArray columns = rows.at(i).toArray();
+                    int control_col = firstCol;
+                    for(int j = 0; j<columns.size();j++)
+                    {
+                        QVariant var;
+                        if(columns.at(j).isString())
                         {
-                            row.resize(firstCol);
+                            var = columns.at(j).toString();
                         }
-                        while(firstCol<=lastCol)
+                        else if(columns.at(j).isDouble())
                         {
-
-                            firstCol++;
+                            var = columns.at(j).toDouble();
                         }
+                        else if(columns.at(j).isBool())
+                        {
+                            var = columns.at(j).toBool();
+                        }
+                        else
+                        {
+                            var = columns.at(j).toInt();
+                        }
+                        container[firstRow][control_col] = var;
                     }
                     firstRow++;
-                    mainrow++;
                 }
 
             }
             else
             {
                 lastError="JSON Parser can't initialize string ["+range+"]";
+                return JSONerror;
             }
         }
         return JSONseparatedCell;
