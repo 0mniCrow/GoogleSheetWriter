@@ -315,12 +315,25 @@ void GoogleSheetsModifier::read()
         getErrMsg("Read method Error: Range of reading isn't selected (Create nessesary amount of rows and columns);");
         return;
     }
-    char va = 'A'+ columns -1;
-    QString range1(QString("A1:")+QChar(va)+QString::number(rows));
+    QString range;
+    if(ui->checkBox_Selected_cells_work->isChecked())
+    {
+        range = model->getSelectedIndexes();
+        if(range.isEmpty())
+        {
+            getErrMsg("Read method Error: selected indexes are empty;");
+            return;
+        }
+    }
+    else
+    {
+        char va = 'A'+ columns -1;
+        range = QString("A1:")+QChar(va)+QString::number(rows);
+    }
     //QString range("R1C1:R"+QString::number(rows)+"C"+QString::number(columns));
     communicator->readRequest(ui->lineSpreadSheetID->text()
                              ,ui->lineSheetName->text(),
-                             range1,ui->line_API_Key->text());
+                             range,ui->line_API_Key->text());
     return;
 }
 

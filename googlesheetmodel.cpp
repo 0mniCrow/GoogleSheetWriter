@@ -279,7 +279,16 @@ bool GoogleSheetModel::loadDataToModel(QVector<QVector<QVariant>>& data)
 
 bool GoogleSheetModel::loadSeparatedData(QVector<QVector<QVariant>>& data)
 {
-
+    for(int i = 0; i<data.size();i++)
+    {
+        for(int j = 0; j<data.at(i).size();j++)
+        {
+            if(data.at(i).at(j).isValid())
+            {
+                dataHolder[i][j] = loadedData[i][j] = data.at(i).at(j);
+            }
+        }
+    }
     return true;
 }
 
@@ -598,4 +607,23 @@ void GoogleSheetModel::setNewSelectedIndex(QModelIndex selectedIndex)
         emit dataChanged(selectedIndex,selectedIndex);
     }
     return;
+}
+
+QString GoogleSheetModel::getSelectedIndexes() const
+{
+    QString answer;
+    const char frst_ltr = 'A';
+    QList<int> rows = selectedCells.uniqueKeys();
+    foreach(int row,rows)
+    {
+        QList<int> columns = selectedCells.values(row);
+        std::sort(columns.begin(),columns.end());
+        foreach(int column, columns)
+        {
+            char letter = frst_ltr+column;
+            QString cell(QString(letter)+QString::number(row+1/*У гугла шэрагі пачынаюцца з 1, а ў масіве з 0, таму "+1"*/)+',');
+            answer.append(cell);
+        }
+    }
+    return answer;
 }

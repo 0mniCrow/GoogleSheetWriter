@@ -136,7 +136,7 @@ JSONparser::answerType JSONparser::parseJSONToData(const QByteArray& data, QVect
         for(int i =0; i<ranges.size();i++)
         {
             QJsonObject cell(ranges.at(i).toObject());
-            QRegularExpression exp("!([A-Z]+)(\\d+):([A-Z]+)(\\d+)");
+            QRegularExpression exp("!([A-Z]+)(\\d+):?([A-Z]+)?(\\d+)?"); ///!TODO: Looks like server returns singular cell name like A1 instead of A1:A1
             QString range(cell.value("range").toString());
             QRegularExpressionMatch match = exp.match(range);
             if(match.hasMatch())
@@ -145,6 +145,14 @@ JSONparser::answerType JSONparser::parseJSONToData(const QByteArray& data, QVect
                 QString startRowNum = match.captured(2);
                 QString endColLetter = match.captured(3);
                 QString endRowNum = match.captured(4);
+                if(endColLetter.isEmpty())
+                {
+                    endColLetter = startColLetter;
+                }
+                if(endRowNum.isEmpty())
+                {
+                    endRowNum = startRowNum;
+                }
                 char start = 'A';
                 int firstCol = 0;
                 int lastCol = 0;
@@ -158,8 +166,8 @@ JSONparser::answerType JSONparser::parseJSONToData(const QByteArray& data, QVect
                     char next = ch.toLatin1();
                     lastCol+= std::abs(next-start);
                 }
-                int firstRow = startRowNum.toInt();
-                int lastRow = endRowNum.toInt();
+                int firstRow = startRowNum.toInt()-1;   //У гугла шэрагі пачынаюцца з 1, а ў масіве
+                int lastRow = endRowNum.toInt()-1;      //з 0, таму -1 для карэктыруючага зруху
                 if(container.size()<(lastRow+1))
                 {
                     container.resize(lastRow+1);

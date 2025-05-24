@@ -52,6 +52,7 @@ public:
     bool downloadDataFromModel(QVector<QVector<QVariant>>& container) const;
     void setChangesToFlash(bool parameter);
     void setControlModifier(bool controlmod);
+    QString getSelectedIndexes() const;
 public slots:
     void setNewSelectedIndex(QModelIndex selectedIndex);
 };
