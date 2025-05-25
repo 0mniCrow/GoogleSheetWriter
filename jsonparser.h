@@ -25,6 +25,7 @@ public:
     enum answerType{ JSONerror = 0, JSONregularAns = 1, JSONwriteReport =2, JSONseparatedCell = 3 };
     bool parseDataToJSON(const QVector<QVector<QVariant>>& data, const QString& sheetName, QByteArray& container);
     answerType parseJSONToData(const QByteArray& data, QVector<QVector<QVariant>>& container);
+    bool parseSepDataToJSON();
 
     QString getLastError() const;
 

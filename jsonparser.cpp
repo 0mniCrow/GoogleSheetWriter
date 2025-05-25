@@ -64,6 +64,16 @@ bool JSONparser::parseDataToJSON(const QVector<QVector<QVariant>>& data, const Q
     container = mainDoc.toJson(QJsonDocument::Compact);
     return true;
 }
+bool JSONparser::parseSepDataToJSON()
+{
+    /*
+        Multiple cells. What to use as container.
+        I need indexes and data parsed one with another.
+        QMultiMap?
+        int(row), int(column), QVariant(data)
+    */
+    return true;
+}
 
 JSONparser::answerType JSONparser::parseJSONToData(const QByteArray& data, QVector<QVector<QVariant>>& container)
 {
