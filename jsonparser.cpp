@@ -64,14 +64,40 @@ bool JSONparser::parseDataToJSON(const QVector<QVector<QVariant>>& data, const Q
     container = mainDoc.toJson(QJsonDocument::Compact);
     return true;
 }
-bool JSONparser::parseSepDataToJSON()
+bool JSONparser::parseSepDataToJSON(const QVector<QVector<QVariant>>& data, const QString& sheetName, QByteArray& container)
 {
-    /*
-        Multiple cells. What to use as container.
-        I need indexes and data parsed one with another.
-        QMultiMap?
-        int(row), int(column), QVariant(data)
-    */
+    if(!data.size())
+    {
+        lastError = "parseData is empty";
+        return false;
+    }
+    QJsonDocument mainDoc;
+    QJsonObject mainObj;
+    QJsonArray cells;
+    mainObj.insert("valueInputOption","USER_ENTERED");
+    char startCol = 'A';
+    for(int row = 0; row<data.size();row++)
+    {
+        for(int col = 0; col<data.at(row).size();col++)
+        {
+            if(data[row][col].isValid())
+            {
+                QJsonObject rowObj;
+                rowObj.insert("range",sheetName+"!"+QChar(startCol+col)+QString::number(row+1));
+                rowObj.insert("majorDimension","ROWS");
+                QJsonArray rowarr;
+                QJsonArray colarr;
+                colarr.append(QJsonValue::fromVariant(data.at(row).at(col)));
+                rowarr.append(colarr);
+                rowObj.insert("values",rowarr);
+                cells.append(rowObj);
+            }
+        }
+    }
+
+    mainObj.insert("data",cells);
+    mainDoc.setObject(mainObj);
+    container = mainDoc.toJson();
     return true;
 }
 
@@ -146,7 +172,7 @@ JSONparser::answerType JSONparser::parseJSONToData(const QByteArray& data, QVect
         for(int i =0; i<ranges.size();i++)
         {
             QJsonObject cell(ranges.at(i).toObject());
-            QRegularExpression exp("!([A-Z]+)(\\d+):?([A-Z]+)?(\\d+)?"); ///!TODO: Looks like server returns singular cell name like A1 instead of A1:A1
+            QRegularExpression exp("!([A-Z]+)(\\d+):?([A-Z]+)?(\\d+)?");
             QString range(cell.value("range").toString());
             QRegularExpressionMatch match = exp.match(range);
             if(match.hasMatch())

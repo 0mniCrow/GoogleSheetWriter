@@ -285,19 +285,36 @@ void GoogleSheetsModifier::write()
     }
     QVector<QVector<QVariant>> container;
     QByteArray jsonData;
-    model->downloadDataFromModel(container);
-    if(!parser.parseDataToJSON(container,ui->lineSheetName->text(),jsonData))
+    QString range;
+    if(ui->checkBox_Selected_cells_work->isChecked())
     {
-        getErrMsg(parser.getLastError());
-        return;
+        if(!model->downloadSepDataFromModel(container))
+        {
+            getErrMsg("Can't load separated data from model");
+            return;
+        }
+        if(!parser.parseSepDataToJSON(container,ui->lineSheetName->text(),jsonData))
+        {
+            getErrMsg(parser.getLastError());
+            return;
+        }
+        range = "BathUpdate";
     }
-    char va = 'A'+container.at(0).size()-1;
-
-    QString range1(QString("A1:")+QChar(va)+QString::number(container.size()));
+    else
+    {
+        model->downloadDataFromModel(container);
+        if(!parser.parseDataToJSON(container,ui->lineSheetName->text(),jsonData))
+        {
+            getErrMsg(parser.getLastError());
+            return;
+        }
+        char va = 'A'+container.at(0).size()-1;
+        range=QString("A1:")+QChar(va)+QString::number(container.size());
+    }
     //QString range("R1C1:R"+QString::number(container.size())+"C"+QString::number(container.at(0).size()));
     communicator->writeRequest(ui->lineSpreadSheetID->text(),
                                ui->lineSheetName->text(),
-                               range1,jsonData);
+                               range,jsonData);
     return;
 }
 

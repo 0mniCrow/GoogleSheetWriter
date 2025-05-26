@@ -122,14 +122,21 @@ void HTTPScommunicator::writeRequest(const QString& SSID, const QString& SSname,
     }
 
 
-    QString urlstr("https://sheets.googleapis.com/v4/spreadsheets/"+SSID+"/values/"+SSname+"!"+range/*+":append"*/);
-    if(httpflags&GoogleSheetsAppendMode)
+    QString urlstr("https://sheets.googleapis.com/v4/spreadsheets/"+SSID+"/values");
+    if(httpflags&w_r_SeparateCells)
     {
-        urlstr.append(":append");
+        urlstr.append(":batchUpdate");
+    }
+    else
+    {
+        urlstr.append("/"+SSname+"!"+range);
+        if(httpflags&GoogleSheetsAppendMode)
+        {
+            urlstr.append(":append");
+        }
     }
     QUrlQuery query;
     query.addQueryItem("valueInputOption","USER_ENTERED");
-    //query.addQueryItem("key",Client_ID);
     QUrl url(urlstr);
     url.setQuery(query);
     QNetworkRequest request;
@@ -138,7 +145,7 @@ void HTTPScommunicator::writeRequest(const QString& SSID, const QString& SSname,
     request.setRawHeader("Expect", "");
     request.setRawHeader("Authorization",QString("Bearer "+authorazer.token()).toUtf8());
     QNetworkReply * reply = nullptr;
-    if(httpflags&GoogleSheetsAppendMode)
+    if((httpflags&GoogleSheetsAppendMode)||(httpflags&w_r_SeparateCells))
     {
         reply = communicator->post(request,data);
     }

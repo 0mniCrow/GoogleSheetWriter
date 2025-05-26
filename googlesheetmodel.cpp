@@ -277,6 +277,35 @@ bool GoogleSheetModel::loadDataToModel(QVector<QVector<QVariant>>& data)
     return true;
 }
 
+bool GoogleSheetModel::downloadSepDataFromModel(QVector<QVector<QVariant>>& container) const
+{
+    if(selectedCells.isEmpty())
+    {
+        return false;
+    }
+    if(dataHolder.isEmpty())
+    {
+        return false;
+    }
+    container.clear();
+    container.resize(dataHolder.size());
+    for(QVector<QVariant>& row:container)
+    {
+        row.resize(dataHolder.at(0).size());
+    }
+    for(int row = 0; row<dataHolder.size();row++)
+    {
+        for(int col = 0; col<dataHolder.at(row).size();col++)
+        {
+            if(selectedCells.constFind(row,col)!=selectedCells.constEnd())
+            {
+                container[row][col]=dataHolder.at(row).at(col);
+            }
+        }
+    }
+    return true;
+}
+
 bool GoogleSheetModel::loadSeparatedData(QVector<QVector<QVariant>>& data)
 {
     for(int i = 0; i<data.size();i++)
@@ -595,7 +624,7 @@ void GoogleSheetModel::setNewSelectedIndex(QModelIndex selectedIndex)
 {
     if(controlModifier)
     {
-        QMultiMap<int,int>::const_iterator it = selectedCells.find(selectedIndex.row(),selectedIndex.column());
+        QMultiMap<int,int>::const_iterator it = selectedCells.constFind(selectedIndex.row(),selectedIndex.column());
         if(it==selectedCells.constEnd())
         {
             selectedCells.insert(selectedIndex.row(),selectedIndex.column());

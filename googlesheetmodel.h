@@ -50,6 +50,7 @@ public:
     bool loadDataToModel(QVector<QVector<QVariant>>& data);
     bool loadSeparatedData(QVector<QVector<QVariant>>& data);
     bool downloadDataFromModel(QVector<QVector<QVariant>>& container) const;
+    bool downloadSepDataFromModel(QVector<QVector<QVariant>>& container) const;
     void setChangesToFlash(bool parameter);
     void setControlModifier(bool controlmod);
     QString getSelectedIndexes() const;
