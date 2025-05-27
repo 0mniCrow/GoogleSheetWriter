@@ -2,6 +2,7 @@
 #define GOOGLESHEETSMODIFIER_H
 
 #include <QWidget>
+#include <QMainWindow>
 #include "googlesheetmodel.h"
 #include "httpscommunicator.h"
 #include "jsonparser.h"
