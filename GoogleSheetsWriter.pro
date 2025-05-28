@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network networkauth
+QT       += core gui network networkauth xml
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -17,12 +17,14 @@ SOURCES += main.cpp\
         googlesheetsmodifier.cpp \
     httpscommunicator.cpp \
     jsonparser.cpp \
-    googlesheetmodel.cpp
+    googlesheetmodel.cpp \
+    xmlparser.cpp
 
 HEADERS  += googlesheetsmodifier.h \
     filemanager.h \
     httpscommunicator.h \
     jsonparser.h \
-    googlesheetmodel.h
+    googlesheetmodel.h \
+    xmlparser.h
 
 FORMS    += googlesheetsmodifier.ui
