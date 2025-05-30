@@ -18,7 +18,6 @@ HTTPScommunicator::~HTTPScommunicator()
     disconnect(communicator,SIGNAL(finished(QNetworkReply*)),this,SLOT(replyFinishedCatch(QNetworkReply*)));
 
     delete communicator;
-    //delete communicator_put;
 
     return;
 }
