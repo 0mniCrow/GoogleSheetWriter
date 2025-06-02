@@ -4,36 +4,28 @@ XMLParser::XMLParser()
 {
 
 }
-bool XMLParser::saveData(const QString& addr, const QMap<QString,QString>& data)
+bool XMLParser::saveData(QByteArray& raw_data, const QMap<QString,QString>& data)
 {
     QDomDocument Settings("savefile");
     QDomElement koranj(Settings.createElement("Settings"));
     Settings.appendChild(koranj);
-
-    QFile file(addr);
-    if(!file.open(QIODevice::WriteOnly))
+    for(QMap<QString,QString>::const_iterator it = data.constBegin();it!=data.constEnd();it++)
     {
-        return false;
+        QDomElement tag(Settings.createElement(it.key()));
+        koranj.appendChild(tag);
+        QDomText text(Settings.createTextNode(it.value()));
+        tag.appendChild(text);
     }
-
-
-    /**/
+    raw_data = Settings.toByteArray();
     return true;
 }
-bool XMLParser::loadData(const QString& addr, QMap<QString,QString>& container)
+bool XMLParser::loadData(const QString& raw_data, QMap<QString,QString>& container)
 {
     QDomDocument Settings("savefile");
-    QFile file(addr);
-    if(!file.open(QIODevice::ReadOnly))
+    if(!Settings.setContent(raw_data))
     {
         return false;
     }
-    if(!Settings.setContent(&file))
-    {
-        file.close();
-        return false;
-    }
-    file.close();
     container.clear();
     QDomElement docElem(Settings.documentElement());
     QDomNode n = docElem.firstChild();

@@ -7,8 +7,8 @@ class XMLParser
 {
 public:
     XMLParser();
-    bool saveData(const QString& addr, const QMap<QString,QString>& data);
-    bool loadData(const QString& addr, QMap<QString,QString>& container);
+    bool saveData(QByteArray& raw_data, const QMap<QString,QString>& data);
+    bool loadData(const QString& raw_data, QMap<QString,QString>& container);
 };
 
 #endif // XMLPARSER_H
