@@ -7,6 +7,7 @@
 #include "httpscommunicator.h"
 #include "jsonparser.h"
 #include "filemanager.h"
+#include "xmlparser.h"
 #include <algorithm>
 #include <QFileDialog>
 #include <QTextStream>
@@ -29,6 +30,7 @@ private:
     HTTPScommunicator * communicator;
     JSONparser parser;
     FileManager filemanager;
+    XMLParser xmlparser;
     bool checkFields();
 protected:
     void keyPressEvent(QKeyEvent * event) override;

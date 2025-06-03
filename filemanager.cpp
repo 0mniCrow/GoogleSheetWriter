@@ -38,38 +38,45 @@ bool FileManager::loadJSONdataFromFile(QByteArray& container, const QString& fil
     file.close();
     return true;
 }
-bool FileManager::savePreferences(const QStringList& data)
+bool FileManager::savePreferences(const QByteArray &data)
 {
     QDir dir(QDir::currentPath());
     QString curpath(QDir::currentPath()+"/Settings/");
     dir.mkdir(curpath);
     QFile file(curpath+"settings.txt");
-    if(!file.open(QIODevice::WriteOnly|QIODevice::Text))
+    if(!file.open(QIODevice::WriteOnly))
     {
         return false;
     }
+    file.write(data);
+    /*
     QTextStream stream(&file);
     for(const QString& str:data)
     {
         stream<<str<<"\n";
     }
+    */
     file.close();
     return true;
 }
 
-bool FileManager::loadPreferences(QStringList& container)
+bool FileManager::loadPreferences(QByteArray &container)
 {
     QFile file(QDir::currentPath()+"/Settings/settings.txt");
-    if(!file.open(QIODevice::ReadOnly|QIODevice::Text))
+    if(!file.open(QIODevice::ReadOnly/*|QIODevice::Text*/))
     {
         return false;
     }
+    container = file.readAll();
+    /*
     QTextStream stream(&file);
     container.clear();
     while(!stream.atEnd())
     {
         container.append(stream.readLine());
     }
+    */
+
     file.close();
     return true;
 }

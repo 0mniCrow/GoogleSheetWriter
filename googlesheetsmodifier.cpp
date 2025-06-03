@@ -462,6 +462,7 @@ void GoogleSheetsModifier::checkRadioGroup()
 
 void GoogleSheetsModifier::saveSettings()
 {
+    /*
     QStringList settings;
     settings.append("API_Key_filename:"+ui->lineAPI_key_filename->text());
     settings.append("OAuth2_filename:"+ui->lineEdit_OAuth_filename->text());
@@ -477,42 +478,81 @@ void GoogleSheetsModifier::saveSettings()
     {
         getErrMsg("Application can't save settings;");
     }
+    */
+    QMap<QString,QString> settings;
+    QByteArray data;
+    settings.insert("API_Key_filename:",ui->lineAPI_key_filename->text());
+    settings.insert("OAuth2_filename:",ui->lineEdit_OAuth_filename->text());
+    settings.insert("Sheet_Name:",ui->lineSheetName->text());
+    settings.insert("SpreadSheetID:",ui->lineSpreadSheetID->text());
+    settings.insert("LastDirectoryPath:",filemanager.getlastfilepath());
+    settings.insert("API_Key_method:",ui->radioButtonAPI_key->isChecked()?"Y":"N");
+    settings.insert("OAuth2_method:",ui->radioButton_OAuth2->isChecked()?"Y":"N");
+    settings.insert("Flash_Changes:",ui->checkBox_FlashChanges->isChecked()?"Y":"N");
+    settings.insert("Write_rewrite_opt:",ui->radioButton_option_rewrite->isChecked()?"Y":"N");
+    settings.insert("Write_append_opt:",ui->radioButton_option_append->isChecked()?"Y":"N");
+    if(!xmlparser.saveData(data,settings))
+    {
+        getErrMsg("Application can't save settings;");
+        return;
+    }
+    if(!filemanager.savePreferences(data))
+    {
+        getErrMsg("Application can't save settings;");
+    }
     return;
 }
 void GoogleSheetsModifier::loadSettings()
 {
+    /*
     QStringList settings;
     if(!filemanager.loadPreferences(settings))
     {
         getErrMsg("Application can't load settings;");
         return;
     }
+    */
+    QByteArray data;
+    QMap<QString,QString> settings;
 
-    for(const QString& str:settings)
+    if(!filemanager.loadPreferences(data))
     {
-        if(str.contains("API_Key_filename:"))
+        getErrMsg("Application can't load settings;");
+        return;
+    }
+    if(!xmlparser.loadData(data,settings))
+    {
+        getErrMsg("Application can't load settings;");
+        return;
+    }
+
+
+    for(QMap<QString,QString>::const_iterator it = settings.constBegin();
+        it!= settings.constEnd();it++/*const QString& str:settings*/)
+    {
+        if(it.key()==("API_Key_filename:"))
         {
-            ui->lineAPI_key_filename->setText(str.sliced(str.indexOf(':')+1));
+            ui->lineAPI_key_filename->setText(it.value()/*str.sliced(str.indexOf(':')+1)*/);
         }
-        else if(str.contains("OAuth2_filename:"))
+        else if(it.key()==("OAuth2_filename:"))
         {
-            ui->lineEdit_OAuth_filename->setText(str.sliced(str.indexOf(':')+1));
+            ui->lineEdit_OAuth_filename->setText(it.value());
         }
-        else if(str.contains("Sheet_Name:"))
+        else if(it.key()=="Sheet_Name:")
         {
-            ui->lineSheetName->setText(str.sliced(str.indexOf(':')+1));
+            ui->lineSheetName->setText(it.value());
         }
-        else if(str.contains("SpreadSheetID:"))
+        else if(it.key()==("SpreadSheetID:"))
         {
-            ui->lineSpreadSheetID->setText(str.sliced(str.indexOf(':')+1));
+            ui->lineSpreadSheetID->setText(it.value());
         }
-        else if(str.contains("LastDirectoryPath:"))
+        else if(it.key()=="LastDirectoryPath:")
         {
-            filemanager.setlastfilepath(str.sliced(str.indexOf(':')+1));
+            filemanager.setlastfilepath(it.value());
         }
-        else if(str.contains("API_Key_method:"))
+        else if(it.key()=="API_Key_method:")
         {
-            if(str.sliced(str.indexOf(':')+1)=="Y")
+            if(it.value()=="Y")
             {
                 ui->radioButtonAPI_key->setChecked(true);
             }
@@ -521,9 +561,9 @@ void GoogleSheetsModifier::loadSettings()
                 ui->radioButtonAPI_key->setChecked(false);
             }
         }
-        else if(str.contains("OAuth2_method:"))
+        else if(it.key()==("OAuth2_method:"))
         {
-            if(str.sliced(str.indexOf(':')+1)=="Y")
+            if(it.value()=="Y")
             {
                 ui->radioButton_OAuth2->setChecked(true);
             }
@@ -532,9 +572,9 @@ void GoogleSheetsModifier::loadSettings()
                 ui->radioButton_OAuth2->setChecked(false);
             }
         }
-        else if(str.contains("Flash_Changes:"))
+        else if(it.key()=="Flash_Changes:")
         {
-            if(str.sliced(str.indexOf(':')+1)=="Y")
+            if(it.value()=="Y")
             {
                 ui->checkBox_FlashChanges->setChecked(true);
             }
@@ -543,9 +583,9 @@ void GoogleSheetsModifier::loadSettings()
                 ui->checkBox_FlashChanges->setChecked(false);
             }
         }
-        else if(str.contains("Write_rewrite_opt:"))
+        else if(it.key()==("Write_rewrite_opt:"))
         {
-            if(str.sliced(str.indexOf(':')+1)=="Y")
+            if(it.value()=="Y")
             {
                 ui->radioButton_option_rewrite->setChecked(true);
             }
@@ -554,9 +594,9 @@ void GoogleSheetsModifier::loadSettings()
                 ui->radioButton_option_rewrite->setChecked(false);
             }
         }
-        else if(str.contains("Write_append_opt:"))
+        else if(it.key()==("Write_append_opt:"))
         {
-            if(str.sliced(str.indexOf(':')+1)=="Y")
+            if(it.value()=="Y")
             {
                 ui->radioButton_option_append->setChecked(true);
             }

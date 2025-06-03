@@ -19,7 +19,7 @@ bool XMLParser::saveData(QByteArray& raw_data, const QMap<QString,QString>& data
     raw_data = Settings.toByteArray();
     return true;
 }
-bool XMLParser::loadData(const QString& raw_data, QMap<QString,QString>& container)
+bool XMLParser::loadData(const QByteArray &raw_data, QMap<QString,QString>& container)
 {
     QDomDocument Settings("savefile");
     if(!Settings.setContent(raw_data))
