@@ -481,16 +481,16 @@ void GoogleSheetsModifier::saveSettings()
     */
     QMap<QString,QString> settings;
     QByteArray data;
-    settings.insert("API_Key_filename:",ui->lineAPI_key_filename->text());
-    settings.insert("OAuth2_filename:",ui->lineEdit_OAuth_filename->text());
-    settings.insert("Sheet_Name:",ui->lineSheetName->text());
-    settings.insert("SpreadSheetID:",ui->lineSpreadSheetID->text());
-    settings.insert("LastDirectoryPath:",filemanager.getlastfilepath());
-    settings.insert("API_Key_method:",ui->radioButtonAPI_key->isChecked()?"Y":"N");
-    settings.insert("OAuth2_method:",ui->radioButton_OAuth2->isChecked()?"Y":"N");
-    settings.insert("Flash_Changes:",ui->checkBox_FlashChanges->isChecked()?"Y":"N");
-    settings.insert("Write_rewrite_opt:",ui->radioButton_option_rewrite->isChecked()?"Y":"N");
-    settings.insert("Write_append_opt:",ui->radioButton_option_append->isChecked()?"Y":"N");
+    settings.insert("API_Key_filename",ui->lineAPI_key_filename->text());
+    settings.insert("OAuth2_filename",ui->lineEdit_OAuth_filename->text());
+    settings.insert("Sheet_Name",ui->lineSheetName->text());
+    settings.insert("SpreadSheetID",ui->lineSpreadSheetID->text());
+    settings.insert("LastDirectoryPath",filemanager.getlastfilepath());
+    settings.insert("API_Key_method",ui->radioButtonAPI_key->isChecked()?"Y":"N");
+    settings.insert("OAuth2_method",ui->radioButton_OAuth2->isChecked()?"Y":"N");
+    settings.insert("Flash_Changes",ui->checkBox_FlashChanges->isChecked()?"Y":"N");
+    settings.insert("Write_rewrite_opt",ui->radioButton_option_rewrite->isChecked()?"Y":"N");
+    settings.insert("Write_append_opt",ui->radioButton_option_append->isChecked()?"Y":"N");
     if(!xmlparser.saveData(data,settings))
     {
         getErrMsg("Application can't save settings;");
@@ -530,27 +530,27 @@ void GoogleSheetsModifier::loadSettings()
     for(QMap<QString,QString>::const_iterator it = settings.constBegin();
         it!= settings.constEnd();it++/*const QString& str:settings*/)
     {
-        if(it.key()==("API_Key_filename:"))
+        if(it.key()==("API_Key_filename"))
         {
             ui->lineAPI_key_filename->setText(it.value()/*str.sliced(str.indexOf(':')+1)*/);
         }
-        else if(it.key()==("OAuth2_filename:"))
+        else if(it.key()==("OAuth2_filename"))
         {
             ui->lineEdit_OAuth_filename->setText(it.value());
         }
-        else if(it.key()=="Sheet_Name:")
+        else if(it.key()=="Sheet_Name")
         {
             ui->lineSheetName->setText(it.value());
         }
-        else if(it.key()==("SpreadSheetID:"))
+        else if(it.key()==("SpreadSheetID"))
         {
             ui->lineSpreadSheetID->setText(it.value());
         }
-        else if(it.key()=="LastDirectoryPath:")
+        else if(it.key()=="LastDirectoryPath")
         {
             filemanager.setlastfilepath(it.value());
         }
-        else if(it.key()=="API_Key_method:")
+        else if(it.key()=="API_Key_method")
         {
             if(it.value()=="Y")
             {
@@ -561,7 +561,7 @@ void GoogleSheetsModifier::loadSettings()
                 ui->radioButtonAPI_key->setChecked(false);
             }
         }
-        else if(it.key()==("OAuth2_method:"))
+        else if(it.key()==("OAuth2_method"))
         {
             if(it.value()=="Y")
             {
@@ -572,7 +572,7 @@ void GoogleSheetsModifier::loadSettings()
                 ui->radioButton_OAuth2->setChecked(false);
             }
         }
-        else if(it.key()=="Flash_Changes:")
+        else if(it.key()=="Flash_Changes")
         {
             if(it.value()=="Y")
             {
@@ -583,7 +583,7 @@ void GoogleSheetsModifier::loadSettings()
                 ui->checkBox_FlashChanges->setChecked(false);
             }
         }
-        else if(it.key()==("Write_rewrite_opt:"))
+        else if(it.key()==("Write_rewrite_opt"))
         {
             if(it.value()=="Y")
             {
@@ -594,7 +594,7 @@ void GoogleSheetsModifier::loadSettings()
                 ui->radioButton_option_rewrite->setChecked(false);
             }
         }
-        else if(it.key()==("Write_append_opt:"))
+        else if(it.key()==("Write_append_opt"))
         {
             if(it.value()=="Y")
             {

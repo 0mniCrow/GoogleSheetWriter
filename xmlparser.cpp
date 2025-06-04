@@ -22,8 +22,12 @@ bool XMLParser::saveData(QByteArray& raw_data, const QMap<QString,QString>& data
 bool XMLParser::loadData(const QByteArray &raw_data, QMap<QString,QString>& container)
 {
     QDomDocument Settings("savefile");
-    if(!Settings.setContent(raw_data))
+    QString errormsg;
+    int errLine;
+    int errCol;
+    if(!Settings.setContent(raw_data,&errormsg,&errLine,&errCol))
     {
+        QString last_err = errormsg;
         return false;
     }
     container.clear();
