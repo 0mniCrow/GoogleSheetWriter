@@ -277,6 +277,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QCheckBox" name="checkBox_readWholeTable">
+         <property name="text">
+          <string>Read whole table</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QGroupBox" name="groupBox_write_option">
          <property name="title">
           <string/>

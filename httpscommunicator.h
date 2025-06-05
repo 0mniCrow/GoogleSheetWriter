@@ -29,7 +29,8 @@ public:
     enum StatusFlags{noFlags = 0x00, oauth2Method = 0x01 /*перастасаванне паміж API_key(0) і OAuth2(1)*/,
                     OAuthAuthorized = 0x02,OAuthWriteMode = 0x04 /*сцяг запісу каб не разбіраць адказ сервера*/,
                     GoogleSheetsAppendMode = 0x08/*падняты зьмяняе запыт з "put" на "post" з дадаткам ":append"*/,
-                    w_r_SeparateCells=0x10/*падняты зьмяняе форму запыта з "адзінага" на "шматлікі"*/};
+                    w_r_SeparateCells=0x10/*падняты зьмяняе форму запыта з "адзінага" на "шматлікі"*/,
+                    r_WholeTable=0x20};
     HTTPScommunicator(QObject * tata = nullptr);
     ~HTTPScommunicator();
     bool isAuthorized() const;

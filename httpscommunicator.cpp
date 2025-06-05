@@ -189,6 +189,10 @@ void HTTPScommunicator::readRequest(const QString& SSID, const QString& SSname,
             query.addQueryItem("ranges",SSname+"!"+*it+":"+*it);
         }
     }
+    else if(httpflags&r_WholeTable)
+    {
+        urlstr.append("/"+SSname+"!A1:Z1000");
+    }
     else
     {
         urlstr.append("/"+SSname+"!"+range);

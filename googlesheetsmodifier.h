@@ -65,6 +65,7 @@ private slots:
     void setChangesFlash();
     void setWriteOption();
     void setSelectedCellsOptions();
+    void setReadWholeSheet();
 
 private:
     Ui::GoogleSheetsModifier *ui;

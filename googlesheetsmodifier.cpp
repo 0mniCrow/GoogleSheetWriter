@@ -44,6 +44,7 @@ GoogleSheetsModifier::GoogleSheetsModifier(QWidget *parent) :
     connect(ui->radioButton_option_rewrite,SIGNAL(clicked(bool)),this,SLOT(setWriteOption()));
     connect(ui->tableGoogleSheets,SIGNAL(clicked(QModelIndex)),model,SLOT(setNewSelectedIndex(QModelIndex)));
     connect(ui->checkBox_Selected_cells_work,SIGNAL(clicked(bool)),this,SLOT(setSelectedCellsOptions()));
+    connect(ui->checkBox_readWholeTable,SIGNAL(clicked(bool)),this,SLOT(setReadWholeSheet()));
     loadSettings();
     return;
 }
@@ -658,6 +659,19 @@ void GoogleSheetsModifier::setSelectedCellsOptions()
     else
     {
         communicator->setFlags(communicator->getFlags()&(~HTTPScommunicator::w_r_SeparateCells));
+    }
+    return;
+}
+
+void GoogleSheetsModifier::setReadWholeSheet()
+{
+    if(ui->checkBox_readWholeTable->isChecked())
+    {
+        communicator->setFlags(communicator->getFlags()|HTTPScommunicator::r_WholeTable);
+    }
+    else
+    {
+        communicator->setFlags(communicator->getFlags()&(~HTTPScommunicator::r_WholeTable));
     }
     return;
 }
