@@ -492,6 +492,8 @@ void GoogleSheetsModifier::saveSettings()
     settings.insert("Flash_Changes",ui->checkBox_FlashChanges->isChecked()?"Y":"N");
     settings.insert("Write_rewrite_opt",ui->radioButton_option_rewrite->isChecked()?"Y":"N");
     settings.insert("Write_append_opt",ui->radioButton_option_append->isChecked()?"Y":"N");
+    settings.insert("Read_Whole_Table",ui->checkBox_readWholeTable->isChecked()?"Y":"N");
+    settings.insert("R_W_Separate_Cells",ui->checkBox_Selected_cells_work->isChecked()?"Y":"N");
     if(!xmlparser.saveData(data,settings))
     {
         getErrMsg("Application can't save settings;");
@@ -606,9 +608,33 @@ void GoogleSheetsModifier::loadSettings()
                 ui->radioButton_option_append->setChecked(false);
             }
         }
+        else if(it.key()==("Read_Whole_Table"))
+        {
+            if(it.value()=="Y")
+            {
+                ui->checkBox_readWholeTable->setChecked(true);
+            }
+            else
+            {
+                ui->checkBox_readWholeTable->setChecked(false);
+            }
+        }
+        else if(it.key()==("R_W_Separate_Cells"))
+        {
+            if(it.value()=="Y")
+            {
+                ui->checkBox_Selected_cells_work->setChecked(true);
+            }
+            else
+            {
+                ui->checkBox_Selected_cells_work->setChecked(false);
+            }
+        }
         checkRadioGroup();
         setChangesFlash();
         setWriteOption();
+        setReadWholeSheet();
+        setSelectedCellsOptions();
     }
     return;
 }
