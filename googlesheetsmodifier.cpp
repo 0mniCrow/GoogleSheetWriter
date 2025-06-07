@@ -19,32 +19,7 @@ GoogleSheetsModifier::GoogleSheetsModifier(QWidget *parent) :
     radButGroup.addButton(ui->radioButton_OAuth2);
     checkRadioGroup();
     setWriteOption();
-    connect(ui->ButtonAddColumn,SIGNAL(clicked(bool)),this,SLOT(addColumn()));
-    connect(ui->ButtonAddRow,SIGNAL(clicked(bool)),this,SLOT(addRow()));
-    connect(ui->ButtonRemoveColumn,SIGNAL(clicked(bool)),this,SLOT(removeColumn()));
-    connect(ui->ButtonRemoveRow,SIGNAL(clicked(bool)),this,SLOT(removeRow()));
-    connect(ui->Button_API_key_file_choose,SIGNAL(clicked(bool)),this,SLOT(chooseAPICredentialFile()));
-    connect(ui->Button_API_key_file_load,SIGNAL(clicked(bool)),this,SLOT(loadAPICredentialFile()));
-    connect(ui->Button_OAuth_choosefile,SIGNAL(clicked(bool)),this,SLOT(chooseOAuthCredentialFile()));
-    connect(ui->Button_OAuth_LoadFile,SIGNAL(clicked(bool)),this,SLOT(loadOAuthCredentialFile()));
-    connect(ui->ButtonRead,SIGNAL(clicked(bool)),this,SLOT(read()));
-    connect(ui->ButtonWrite,SIGNAL(clicked(bool)),this,SLOT(write()));
-    connect(communicator,SIGNAL(progress(qint64,qint64)),this,SLOT(setProgressBar(qint64,qint64)));
-    connect(communicator,SIGNAL(errormsg(QString)),this,SLOT(getErrMsg(QString)));
-    connect(communicator,SIGNAL(finished(QByteArray)),this,SLOT(getFinishedSignal(QByteArray)));
-    connect(ui->ButtonAuth,SIGNAL(clicked(bool)),this,SLOT(authificate()));
-    connect(ui->ButtonSave,SIGNAL(clicked(bool)),this,SLOT(save()));
-    connect(ui->ButtonLoad,SIGNAL(clicked(bool)),this,SLOT(load()));
-    connect(ui->radioButtonAPI_key,SIGNAL(clicked(bool)),this,SLOT(checkRadioGroup()));
-    connect(ui->radioButton_OAuth2,SIGNAL(clicked(bool)),this,SLOT(checkRadioGroup()));
-    connect(ui->Button_Save_settings,SIGNAL(clicked(bool)),this,SLOT(saveSettings()));
-    connect(ui->Button_LoadSettings,SIGNAL(clicked(bool)),this,SLOT(loadSettings()));
-    connect(ui->checkBox_FlashChanges,SIGNAL(stateChanged(int)),this,SLOT(setChangesFlash()));
-    connect(ui->radioButton_option_append,SIGNAL(clicked(bool)),this,SLOT(setWriteOption()));
-    connect(ui->radioButton_option_rewrite,SIGNAL(clicked(bool)),this,SLOT(setWriteOption()));
-    connect(ui->tableGoogleSheets,SIGNAL(clicked(QModelIndex)),model,SLOT(setNewSelectedIndex(QModelIndex)));
-    connect(ui->checkBox_Selected_cells_work,SIGNAL(clicked(bool)),this,SLOT(setSelectedCellsOptions()));
-    connect(ui->checkBox_readWholeTable,SIGNAL(clicked(bool)),this,SLOT(setReadWholeSheet()));
+    createConnections();
     loadSettings();
     return;
 }
@@ -63,6 +38,39 @@ GoogleSheetsModifier::~GoogleSheetsModifier()
     return;
 }
 
+void GoogleSheetsModifier::createConnections()
+{
+    connect(ui->ButtonAddColumn,SIGNAL(clicked(bool)),this,SLOT(tableView_addColumn()));
+    connect(ui->ButtonAddRow,SIGNAL(clicked(bool)),this,SLOT(tableView_addRow()));
+    connect(ui->ButtonRemoveColumn,SIGNAL(clicked(bool)),this,SLOT(tableView_removeColumn()));
+    connect(ui->ButtonRemoveRow,SIGNAL(clicked(bool)),this,SLOT(tableView_removeRow()));
+    connect(ui->Button_API_key_file_choose,SIGNAL(clicked(bool)),this,SLOT(credentials_APIkey_File_choose()));
+    connect(ui->Button_API_key_file_load,SIGNAL(clicked(bool)),this,SLOT(credentials_APIkey_File_load()));
+    connect(ui->Button_OAuth_choosefile,SIGNAL(clicked(bool)),this,SLOT(credentials_OAuth2_File_choose()));
+    connect(ui->Button_OAuth_LoadFile,SIGNAL(clicked(bool)),this,SLOT(credentials_OAuth2_File_load()));
+    connect(ui->ButtonRead,SIGNAL(clicked(bool)),this,SLOT(googleSheetAPI_read()));
+    connect(ui->ButtonWrite,SIGNAL(clicked(bool)),this,SLOT(googleSheetAPI_write()));
+    connect(communicator,SIGNAL(progress(qint64,qint64)),this,SLOT(setProgressBar(qint64,qint64)));
+    connect(communicator,SIGNAL(errormsg(QString)),this,SLOT(getErrMsg(QString)));
+    connect(communicator,SIGNAL(finished(QByteArray)),this,SLOT(googleSheetAPI_getFinishSig(QByteArray)));
+    connect(ui->ButtonAuth,SIGNAL(clicked(bool)),this,SLOT(googleSheetAPI_OAuth2_authorize()));
+    connect(ui->ButtonSave,SIGNAL(clicked(bool)),this,SLOT(tableView_saveCurData_toFile()));
+    connect(ui->ButtonLoad,SIGNAL(clicked(bool)),this,SLOT(tableView_loadData_fromFile()));
+    connect(ui->radioButtonAPI_key,SIGNAL(clicked(bool)),this,SLOT(checkRadioGroup()));
+    connect(ui->radioButton_OAuth2,SIGNAL(clicked(bool)),this,SLOT(checkRadioGroup()));
+    connect(ui->Button_Save_settings,SIGNAL(clicked(bool)),this,SLOT(saveSettings()));
+    connect(ui->Button_LoadSettings,SIGNAL(clicked(bool)),this,SLOT(loadSettings()));
+    connect(ui->checkBox_FlashChanges,SIGNAL(stateChanged(int)),this,SLOT(setChangesFlash()));
+    connect(ui->radioButton_option_append,SIGNAL(clicked(bool)),this,SLOT(setWriteOption()));
+    connect(ui->radioButton_option_rewrite,SIGNAL(clicked(bool)),this,SLOT(setWriteOption()));
+    connect(ui->tableGoogleSheets,SIGNAL(clicked(QModelIndex)),model,SLOT(setNewSelectedIndex(QModelIndex)));
+    connect(ui->checkBox_Selected_cells_work,SIGNAL(clicked(bool)),this,SLOT(setSelectedCellsOptions()));
+    connect(ui->checkBox_readWholeTable,SIGNAL(clicked(bool)),this,SLOT(setReadWholeSheet()));
+
+    return;
+}
+
+
 void GoogleSheetsModifier::setProgressBar(qint64 val,qint64 total)
 {
     ui->progressBar->setValue(val*100/total);
@@ -75,7 +83,7 @@ void GoogleSheetsModifier::getErrMsg(const QString &errMsg)
     return;
 }
 
-void GoogleSheetsModifier::authificate()
+void GoogleSheetsModifier::googleSheetAPI_OAuth2_authorize()
 {
     if((!ui->lineClientID->text().isEmpty())&&(!ui->lineClientSecret->text().isEmpty()))
     {
@@ -86,7 +94,7 @@ void GoogleSheetsModifier::authificate()
     return;
 }
 
-void GoogleSheetsModifier::addRow()
+void GoogleSheetsModifier::tableView_addRow()
 {
     QModelIndexList indexList(select_model->selectedIndexes());
     if(indexList.isEmpty())
@@ -103,7 +111,7 @@ void GoogleSheetsModifier::addRow()
     return;
 }
 
-void GoogleSheetsModifier::addColumn()
+void GoogleSheetsModifier::tableView_addColumn()
 {
     QModelIndexList indexList(select_model->selectedIndexes());
     if(indexList.isEmpty())
@@ -120,7 +128,7 @@ void GoogleSheetsModifier::addColumn()
     return;
 }
 
-void GoogleSheetsModifier::removeRow()
+void GoogleSheetsModifier::tableView_removeRow()
 {
     QModelIndexList indexList(select_model->selectedIndexes());
     if(indexList.isEmpty())
@@ -142,7 +150,7 @@ void GoogleSheetsModifier::removeRow()
     return;
 }
 
-void GoogleSheetsModifier::removeColumn()
+void GoogleSheetsModifier::tableView_removeColumn()
 {
     QModelIndexList indexList(select_model->selectedIndexes());
     if(indexList.isEmpty())
@@ -164,7 +172,7 @@ void GoogleSheetsModifier::removeColumn()
     return;
 }
 
-void GoogleSheetsModifier::chooseAPICredentialFile()
+void GoogleSheetsModifier::credentials_APIkey_File_choose()
 {
     QString lastpath(filemanager.getlastfilepath());
     if(lastpath.isEmpty())
@@ -175,18 +183,18 @@ void GoogleSheetsModifier::chooseAPICredentialFile()
                          this,"Open API key file",lastpath,
                          "Text file (*.txt)",nullptr,QFileDialog::DontUseNativeDialog));
 
-    QString controlpath = QDir::cleanPath(filename);
+    //QString controlpath = QDir::cleanPath(filename);
 
     ui->lineAPI_key_filename->setText(filename);
     if(!filename.isEmpty())
     {
         filemanager.setlastfilepath(filename.left(filename.lastIndexOf('.')));
-        loadAPICredentialFile();
+        credentials_APIkey_File_load();
     }
     return;
 }
 
-void GoogleSheetsModifier::loadAPICredentialFile()
+void GoogleSheetsModifier::credentials_APIkey_File_load()
 {
     QString filename(ui->lineAPI_key_filename->text());
     QString Api_key;
@@ -198,7 +206,7 @@ void GoogleSheetsModifier::loadAPICredentialFile()
     return;
 }
 
-void GoogleSheetsModifier::chooseOAuthCredentialFile()
+void GoogleSheetsModifier::credentials_OAuth2_File_choose()
 {
     QString lastpath(filemanager.getlastfilepath());
     if(lastpath.isEmpty())
@@ -210,16 +218,16 @@ void GoogleSheetsModifier::chooseOAuthCredentialFile()
                          "Text file (*.txt)",nullptr,QFileDialog::DontUseNativeDialog));
     ui->lineEdit_OAuth_filename->setText(filename);
 
-    QString controlpath = QDir::cleanPath(filename);
+    //QString controlpath = QDir::cleanPath(filename);
     if(!filename.isEmpty())
     {
         filemanager.setlastfilepath(filename.left(filename.lastIndexOf('.')));
-        loadOAuthCredentialFile();
+        credentials_OAuth2_File_load();
     }
     return;
 }
 
-void GoogleSheetsModifier::loadOAuthCredentialFile()
+void GoogleSheetsModifier::credentials_OAuth2_File_load()
 {
     QString filename(ui->lineEdit_OAuth_filename->text());
     QStringList data;
@@ -272,7 +280,7 @@ bool GoogleSheetsModifier::checkFields()
     return true;
 }
 
-void GoogleSheetsModifier::write()
+void GoogleSheetsModifier::googleSheetAPI_write()
 {
     if(!checkFields())
     {
@@ -319,7 +327,7 @@ void GoogleSheetsModifier::write()
     return;
 }
 
-void GoogleSheetsModifier::read()
+void GoogleSheetsModifier::googleSheetAPI_read()
 {
     if(!checkFields())
     {
@@ -355,7 +363,7 @@ void GoogleSheetsModifier::read()
     return;
 }
 
-void GoogleSheetsModifier::save()
+void GoogleSheetsModifier::tableView_saveCurData_toFile()
 {
     QString lastpath(filemanager.getlastfilepath());
     if(lastpath.isEmpty())
@@ -381,7 +389,7 @@ void GoogleSheetsModifier::save()
     filemanager.setlastfilepath(filename.left(filename.lastIndexOf('.')));
     return;
 }
-void GoogleSheetsModifier::load()
+void GoogleSheetsModifier::tableView_loadData_fromFile()
 {
     QString lastpath(filemanager.getlastfilepath());
     if(lastpath.isEmpty())
@@ -399,7 +407,7 @@ void GoogleSheetsModifier::load()
         return;
     }
     filemanager.setlastfilepath(filename.left(filename.lastIndexOf('.')));
-    getFinishedSignal(JSONdata);
+    googleSheetAPI_getFinishSig(JSONdata);
 //    if(!parser.parseJSONToData(JSONdata,rawData))
 //    {
 //        getErrMsg(parser.getLastError());
@@ -409,7 +417,7 @@ void GoogleSheetsModifier::load()
     return;
 }
 
-void GoogleSheetsModifier::getFinishedSignal(const QByteArray& data)
+void GoogleSheetsModifier::googleSheetAPI_getFinishSig(const QByteArray& data)
 {
     QVector<QVector<QVariant>> modelData;
     switch(parser.parseJSONToData(data,modelData))
@@ -494,7 +502,14 @@ void GoogleSheetsModifier::saveSettings()
     settings.insert("Write_append_opt",ui->radioButton_option_append->isChecked()?"Y":"N");
     settings.insert("Read_Whole_Table",ui->checkBox_readWholeTable->isChecked()?"Y":"N");
     settings.insert("R_W_Separate_Cells",ui->checkBox_Selected_cells_work->isChecked()?"Y":"N");
-    if(!xmlparser.saveData(data,settings))
+    /*if(!xmlparser.saveData(data,settings))
+    {
+        getErrMsg("Application can't save settings;");
+        return;
+    }
+    */
+    ParseXML_dataToXML(data,settings);
+    if(data.isEmpty())
     {
         getErrMsg("Application can't save settings;");
         return;
@@ -523,9 +538,10 @@ void GoogleSheetsModifier::loadSettings()
         getErrMsg("Application can't load settings;");
         return;
     }
-    if(!xmlparser.loadData(data,settings))
+    QString err;
+    if(/*!xmlparser.loadData(data,settings)*/!ParseXML_XMLToData(data,settings,&err))
     {
-        getErrMsg("Application can't load settings;");
+        getErrMsg(err);
         return;
     }
 
