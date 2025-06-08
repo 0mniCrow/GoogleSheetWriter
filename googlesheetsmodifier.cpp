@@ -14,6 +14,7 @@ GoogleSheetsModifier::GoogleSheetsModifier(QWidget *parent) :
     ui->tableGoogleSheets->setDragDropMode(QAbstractItemView::InternalMove);
     ui->tableGoogleSheets->setDragDropOverwriteMode(false);
     ui->tableGoogleSheets->setDefaultDropAction(Qt::MoveAction);
+    ui->tableGoogleSheets->setContextMenuPolicy(Qt::CustomContextMenu);
     communicator = new HTTPScommunicator();
     radButGroup.addButton(ui->radioButtonAPI_key);
     radButGroup.addButton(ui->radioButton_OAuth2);
@@ -66,6 +67,8 @@ void GoogleSheetsModifier::createConnections()
     connect(ui->tableGoogleSheets,SIGNAL(clicked(QModelIndex)),model,SLOT(setNewSelectedIndex(QModelIndex)));
     connect(ui->checkBox_Selected_cells_work,SIGNAL(clicked(bool)),this,SLOT(setSelectedCellsOptions()));
     connect(ui->checkBox_readWholeTable,SIGNAL(clicked(bool)),this,SLOT(setReadWholeSheet()));
+    connect(ui->tableGoogleSheets,&QTableView::customContextMenuRequested,
+            this,&GoogleSheetsModifier::tableView_catchContextMenuCall);
 
     return;
 }
@@ -715,5 +718,18 @@ void GoogleSheetsModifier::setReadWholeSheet()
     {
         communicator->setFlags(communicator->getFlags()&(~HTTPScommunicator::r_WholeTable));
     }
+    return;
+}
+
+
+void GoogleSheetsModifier::tableView_catchContextMenuCall(const QPoint& point)
+{
+    QModelIndex index(ui->tableGoogleSheets->indexAt(point));
+
+    return;
+}
+
+void GoogleSheetsModifier::tableView_createActions()
+{
     return;
 }

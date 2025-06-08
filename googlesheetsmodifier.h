@@ -15,6 +15,10 @@
 #include <QButtonGroup>
 #include <QPalette>
 #include <QKeyEvent>
+#include <QPoint>
+#include <QMenu>
+#include <QAction>
+#include <QActionGroup>
 
 namespace Ui {
 class GoogleSheetsModifier;
@@ -30,9 +34,19 @@ private:
     HTTPScommunicator* communicator;
     JSONparser parser;
     FileManager filemanager;
-    //XMLParser xmlparser;
+
+    //Context menu actions
+    QActionGroup* fontActGr;
+    QAction* cutAct;
+    QAction* copyAct;
+    QAction* pasteAct;
+    QAction* boldFontAct;
+    QAction* italicFontAct;
+    QAction* standardFontAct;
+
     bool checkFields();
     void createConnections();
+    void tableView_createActions();
 protected:
     void keyPressEvent(QKeyEvent* event) override;
     void keyReleaseEvent(QKeyEvent* event) override;
@@ -49,6 +63,8 @@ private slots:
     void tableView_removeColumn();
     void tableView_saveCurData_toFile();
     void tableView_loadData_fromFile();
+    void tableView_catchContextMenuCall(const QPoint& point);
+
 
     //Аперацыі з уліковымі дадзенымі
     void credentials_APIkey_File_choose();

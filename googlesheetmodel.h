@@ -56,6 +56,14 @@ public:
     QString getSelectedIndexes() const;
 public slots:
     void setNewSelectedIndex(QModelIndex selectedIndex);
+
+   //Аперацыі кантэкстнага меню
+    void cut(const QModelIndex& index);
+    void copy(const QModelIndex& index);
+    void paste(const QModelIndex& index);
+    void bold_font(const QModelIndex& index);
+    void italic_font(const QModelIndex& index);
+    void standard_font(const QModelIndex& index);
 };
 
 #endif // GOOGLESHEETMODEL_H

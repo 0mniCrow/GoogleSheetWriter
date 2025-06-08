@@ -656,3 +656,33 @@ QString GoogleSheetModel::getSelectedIndexes() const
     }
     return answer;
 }
+
+
+void GoogleSheetModel::cut(const QModelIndex& index)
+{
+    return;
+}
+
+void GoogleSheetModel::copy(const QModelIndex& index)
+{
+    return;
+}
+
+void GoogleSheetModel::paste(const QModelIndex& index)
+{
+    return;
+}
+
+void GoogleSheetModel::bold_font(const QModelIndex& index)
+{
+    return;
+}
+void GoogleSheetModel::italic_font(const QModelIndex& index)
+{
+    return;
+}
+
+void GoogleSheetModel::standard_font(const QModelIndex& index)
+{
+    return;
+}
