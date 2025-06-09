@@ -46,6 +46,7 @@ private:
 
     bool checkFields();
     void createConnections();
+
     void tableView_createActions();
 protected:
     void keyPressEvent(QKeyEvent* event) override;
@@ -64,6 +65,13 @@ private slots:
     void tableView_saveCurData_toFile();
     void tableView_loadData_fromFile();
     void tableView_catchContextMenuCall(const QPoint& point);
+
+    void tableView_Action_cut();
+    void tableView_Action_copy();
+    void tableView_Action_paste();
+    void tableView_Action_bold();
+    void tableView_Action_italic();
+    void tableView_Action_standard();
 
 
     //Аперацыі з уліковымі дадзенымі

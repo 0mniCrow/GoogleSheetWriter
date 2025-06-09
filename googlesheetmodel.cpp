@@ -660,16 +660,28 @@ QString GoogleSheetModel::getSelectedIndexes() const
 
 void GoogleSheetModel::cut(const QModelIndex& index)
 {
+    copy(index);
+    dataHolder[index.row()][index.column()].clear();
+    emit dataChanged(index,index);
     return;
 }
 
 void GoogleSheetModel::copy(const QModelIndex& index)
 {
+    QClipboard * clipboard(QApplication::clipboard());
+    clipboard->setText(dataHolder[index.row()][index.column()].toString());
     return;
 }
 
 void GoogleSheetModel::paste(const QModelIndex& index)
 {
+    QClipboard * clipboard(QApplication::clipboard());
+    const QMimeData * mimedata(clipboard->mimeData());
+    if(mimedata->hasText())
+    {
+        dataHolder[index.row()][index.column()].setValue(mimedata->text());
+        emit dataChanged(index,index);
+    }
     return;
 }
 

@@ -725,11 +725,61 @@ void GoogleSheetsModifier::setReadWholeSheet()
 void GoogleSheetsModifier::tableView_catchContextMenuCall(const QPoint& point)
 {
     QModelIndex index(ui->tableGoogleSheets->indexAt(point));
+    QMenu contextMenu(this);
+    contextMenu.addAction(cutAct);
+    contextMenu.addAction(copyAct);
+    contextMenu.addAction(pasteAct);
+    contextMenu.addAction(boldFontAct);
+    contextMenu.addAction(italicFontAct);
+    contextMenu.addAction(standardFontAct);
+    QAction* selectedAction(contextMenu.exec(ui->tableGoogleSheets->viewport()->mapToGlobal(point)));
+
+
 
     return;
 }
 
 void GoogleSheetsModifier::tableView_createActions()
 {
+    cutAct = new QAction(tr("Cu&t"), this);
+    cutAct->setShortcuts(QKeySequence::Cut);
+    cutAct->setStatusTip(tr("Cut the current selection's contents to the "
+                            "clipboard"));
+    connect(cutAct, &QAction::triggered, this, &GoogleSheetsModifier::tableView_Action_cut);
+
+    copyAct = new QAction(tr("&Copy"), this);
+    copyAct->setShortcuts(QKeySequence::Copy);
+    copyAct->setStatusTip(tr("Copy the current selection's contents to the "
+                             "clipboard"));
+    connect(copyAct, &QAction::triggered, this, &GoogleSheetsModifier::tableView_Action_copy);
+
+    pasteAct = new QAction(tr("&Paste"), this);
+    pasteAct->setShortcuts(QKeySequence::Paste);
+    pasteAct->setStatusTip(tr("Paste the clipboard's contents into the current "
+                              "selection"));
+    connect(pasteAct, &QAction::triggered, this, &GoogleSheetsModifier::tableView_Action_paste);
+
+    boldFontAct = new QAction(tr("&Bold"),this);
+    boldFontAct->setShortcut(Qt::CTRL|Qt::Key_B);
+    boldFontAct->setStatusTip(tr("Make the text in the cell bold"));
+
+    connect(boldFontAct,&QAction::triggered,this, &GoogleSheetsModifier::tableView_Action_bold);
+
+    italicFontAct = new QAction(tr("&Italic"),this);
+    italicFontAct->setShortcut(Qt::CTRL|Qt::Key_I);
+    italicFontAct->setStatusTip(tr("Make the text in the cell italic"));
+
+    connect(italicFontAct,&QAction::triggered,this, &GoogleSheetsModifier::tableView_Action_italic);
+
+    standardFontAct = new QAction(tr("Sta&ndard"),this);
+    standardFontAct->setShortcut(Qt::CTRL|Qt::Key_K);
+    standardFontAct->setStatusTip(tr("Make the text in the cell standard"));
+
+    connect(standardFontAct,&QAction::triggered,this, &GoogleSheetsModifier::tableView_Action_standard);
+
+    fontActGr = new QActionGroup(this);
+    fontActGr->addAction(boldFontAct);
+    fontActGr->addAction(italicFontAct);
+    fontActGr->addAction(standardFontAct);
     return;
 }

@@ -3,6 +3,7 @@
 
 #include <QAbstractItemModel>
 #include <QAbstractTableModel>
+#include <QApplication>
 #include <QItemSelectionModel>
 #include <QMimeData>
 #include <QDataStream>
@@ -10,6 +11,7 @@
 #include <QMap>
 #include <QMultiMap>
 #include <QColor>
+#include <QClipboard>
 #define ROWS 6
 #define COLUMNS 5
 
