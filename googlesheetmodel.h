@@ -12,22 +12,31 @@
 #include <QMultiMap>
 #include <QColor>
 #include <QClipboard>
+#include <QFont>
 #define ROWS 6
 #define COLUMNS 5
 
+struct CellObj
+{
+    enum fontFlags{noFont = 0, boldFont = 1, italicFont =2};
+    QVariant data;
+    bool isSelected;
+    char fontFlag;
+    CellObj():data(),isSelected(false),fontFlag(noFont){}
+};
 
 class GoogleSheetModel:public QAbstractTableModel
 {
     Q_OBJECT
 private:
-    QVector<QVector<QVariant>> dataHolder;
+    QVector<QVector<CellObj>> displayData;
     QVector<QVector<QVariant>> loadedData;
-    QMultiMap<int,int> selectedCells;
     bool flashChanges;
     bool controlModifier;
     bool checkIndex(const QModelIndex& index) const;
 public:
     GoogleSheetModel(QObject * tata = nullptr);
+    GoogleSheetModel(unsigned int rows, unsigned int columns, QObject* tata = nullptr);
     ~GoogleSheetModel();
     QVariant data(const QModelIndex& index, int role) const override;
     bool setData(const QModelIndex& index, const QVariant &value, int role) override;
@@ -51,8 +60,7 @@ public:
     QMimeData*  mimeData(const QModelIndexList& indexex) const override;
     bool loadDataToModel(QVector<QVector<QVariant>>& data);
     bool loadSeparatedData(QVector<QVector<QVariant>>& data);
-    bool downloadDataFromModel(QVector<QVector<QVariant>>& container) const;
-    bool downloadSepDataFromModel(QVector<QVector<QVariant>>& container) const;
+    bool downloadDataFromModel(QVector<QVector<QVariant>>& container,bool selectedOnly = false) const;
     void setChangesToFlash(bool parameter);
     void setControlModifier(bool controlmod);
     QString getSelectedIndexes() const;
@@ -63,9 +71,7 @@ public slots:
     void cut(const QModelIndex& index);
     void copy(const QModelIndex& index);
     void paste(const QModelIndex& index);
-    void bold_font(const QModelIndex& index);
-    void italic_font(const QModelIndex& index);
-    void standard_font(const QModelIndex& index);
+    void setFont(const QModelIndex& index, CellObj::fontFlags font_type);
 };
 
 #endif // GOOGLESHEETMODEL_H

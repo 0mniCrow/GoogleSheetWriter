@@ -36,6 +36,7 @@ private:
     FileManager filemanager;
 
     //Context menu actions
+    /*
     QActionGroup* fontActGr;
     QAction* cutAct;
     QAction* copyAct;
@@ -43,15 +44,16 @@ private:
     QAction* boldFontAct;
     QAction* italicFontAct;
     QAction* standardFontAct;
+    */
 
     bool checkFields();
     void createConnections();
 
-    void tableView_createActions();
+    //void tableView_createActions();
 protected:
     void keyPressEvent(QKeyEvent* event) override;
     void keyReleaseEvent(QKeyEvent* event) override;
-//    void contextMenuEvent(QContextMenuEvent* event) override;
+    //void contextMenuEvent(QContextMenuEvent* event) override;
 public:
     explicit GoogleSheetsModifier(QWidget *parent = 0);
     ~GoogleSheetsModifier();
@@ -65,14 +67,14 @@ private slots:
     void tableView_saveCurData_toFile();
     void tableView_loadData_fromFile();
     void tableView_catchContextMenuCall(const QPoint& point);
-
+/*
     void tableView_Action_cut();
     void tableView_Action_copy();
     void tableView_Action_paste();
     void tableView_Action_bold();
     void tableView_Action_italic();
     void tableView_Action_standard();
-
+*/
 
     //Аперацыі з уліковымі дадзенымі
     void credentials_APIkey_File_choose();

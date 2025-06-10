@@ -300,7 +300,7 @@ void GoogleSheetsModifier::googleSheetAPI_write()
     QString range;
     if(ui->checkBox_Selected_cells_work->isChecked())
     {
-        if(!model->downloadSepDataFromModel(container))
+        if(!model->downloadDataFromModel(container,true))
         {
             getErrMsg("Can't load separated data from model");
             return;
@@ -403,7 +403,6 @@ void GoogleSheetsModifier::tableView_loadData_fromFile()
                          this,"Load JSON file",lastpath,
                          "JSON (*.json)",nullptr,QFileDialog::DontUseNativeDialog));
     QByteArray JSONdata;
-//    QVector<QVector<QVariant>> rawData;
     if(!filemanager.loadJSONdataFromFile(JSONdata,filename))
     {
         getErrMsg("Can't load JSON data from file ["+filename+"];");
@@ -411,12 +410,6 @@ void GoogleSheetsModifier::tableView_loadData_fromFile()
     }
     filemanager.setlastfilepath(filename.left(filename.lastIndexOf('.')));
     googleSheetAPI_getFinishSig(JSONdata);
-//    if(!parser.parseJSONToData(JSONdata,rawData))
-//    {
-//        getErrMsg(parser.getLastError());
-//        return;
-//    }
-//    model->loadDataToModel(rawData);
     return;
 }
 
@@ -474,23 +467,6 @@ void GoogleSheetsModifier::checkRadioGroup()
 
 void GoogleSheetsModifier::saveSettings()
 {
-    /*
-    QStringList settings;
-    settings.append("API_Key_filename:"+ui->lineAPI_key_filename->text());
-    settings.append("OAuth2_filename:"+ui->lineEdit_OAuth_filename->text());
-    settings.append("Sheet_Name:"+ui->lineSheetName->text());
-    settings.append("SpreadSheetID:"+ui->lineSpreadSheetID->text());
-    settings.append("LastDirectoryPath:"+filemanager.getlastfilepath());
-    settings.append(QString("API_Key_method:")+(ui->radioButtonAPI_key->isChecked()?"Y":"N"));
-    settings.append(QString("OAuth2_method:")+(ui->radioButton_OAuth2->isChecked()?"Y":"N"));
-    settings.append(QString("Flash_Changes:")+(ui->checkBox_FlashChanges->isChecked()?"Y":"N"));
-    settings.append(QString("Write_rewrite_opt:")+(ui->radioButton_option_rewrite->isChecked()?"Y":"N"));
-    settings.append(QString("Write_append_opt:")+(ui->radioButton_option_append->isChecked()?"Y":"N"));
-    if(!filemanager.savePreferences(settings))
-    {
-        getErrMsg("Application can't save settings;");
-    }
-    */
     QMap<QString,QString> settings;
     QByteArray data;
     settings.insert("API_Key_filename",ui->lineAPI_key_filename->text());
@@ -505,12 +481,6 @@ void GoogleSheetsModifier::saveSettings()
     settings.insert("Write_append_opt",ui->radioButton_option_append->isChecked()?"Y":"N");
     settings.insert("Read_Whole_Table",ui->checkBox_readWholeTable->isChecked()?"Y":"N");
     settings.insert("R_W_Separate_Cells",ui->checkBox_Selected_cells_work->isChecked()?"Y":"N");
-    /*if(!xmlparser.saveData(data,settings))
-    {
-        getErrMsg("Application can't save settings;");
-        return;
-    }
-    */
     ParseXML_dataToXML(data,settings);
     if(data.isEmpty())
     {
@@ -726,60 +696,45 @@ void GoogleSheetsModifier::tableView_catchContextMenuCall(const QPoint& point)
 {
     QModelIndex index(ui->tableGoogleSheets->indexAt(point));
     QMenu contextMenu(this);
-    contextMenu.addAction(cutAct);
-    contextMenu.addAction(copyAct);
-    contextMenu.addAction(pasteAct);
-    contextMenu.addAction(boldFontAct);
-    contextMenu.addAction(italicFontAct);
-    contextMenu.addAction(standardFontAct);
+    QAction* cutAct = contextMenu.addAction("Cut");
+    QAction* copyAct = contextMenu.addAction("Copy");
+    QAction* pasteAct = contextMenu.addAction("Paste");
+    QMenu* submenu = contextMenu.addMenu("Fonts");
+    QAction* boldFontAct = submenu->addAction("Bold");
+    QAction* italicFontAct = submenu->addAction("Italic");
+    QAction* standardFontAct = submenu->addAction("Standard");
+
     QAction* selectedAction(contextMenu.exec(ui->tableGoogleSheets->viewport()->mapToGlobal(point)));
+    if(selectedAction == cutAct)
+    {
+        model->cut(index);
+    }
+    else if(selectedAction ==copyAct)
+    {
+        model->copy(index);
+    }
+    else if(selectedAction == pasteAct)
+    {
+        model->paste(index);
+    }
+    else if(selectedAction == boldFontAct)
+    {
+        model->setFont(index,CellObj::boldFont);
+        //model->bold_font(index);
+    }
+    else if(selectedAction == italicFontAct)
+    {
+        model->setFont(index,CellObj::italicFont);
+        //model->italic_font(index);
+    }
+    else if(selectedAction == standardFontAct)
+    {
+        model->setFont(index,CellObj::noFont);
+        //model->standard_font(index);
+    }
+    else
+    {
 
-
-
-    return;
-}
-
-void GoogleSheetsModifier::tableView_createActions()
-{
-    cutAct = new QAction(tr("Cu&t"), this);
-    cutAct->setShortcuts(QKeySequence::Cut);
-    cutAct->setStatusTip(tr("Cut the current selection's contents to the "
-                            "clipboard"));
-    connect(cutAct, &QAction::triggered, this, &GoogleSheetsModifier::tableView_Action_cut);
-
-    copyAct = new QAction(tr("&Copy"), this);
-    copyAct->setShortcuts(QKeySequence::Copy);
-    copyAct->setStatusTip(tr("Copy the current selection's contents to the "
-                             "clipboard"));
-    connect(copyAct, &QAction::triggered, this, &GoogleSheetsModifier::tableView_Action_copy);
-
-    pasteAct = new QAction(tr("&Paste"), this);
-    pasteAct->setShortcuts(QKeySequence::Paste);
-    pasteAct->setStatusTip(tr("Paste the clipboard's contents into the current "
-                              "selection"));
-    connect(pasteAct, &QAction::triggered, this, &GoogleSheetsModifier::tableView_Action_paste);
-
-    boldFontAct = new QAction(tr("&Bold"),this);
-    boldFontAct->setShortcut(Qt::CTRL|Qt::Key_B);
-    boldFontAct->setStatusTip(tr("Make the text in the cell bold"));
-
-    connect(boldFontAct,&QAction::triggered,this, &GoogleSheetsModifier::tableView_Action_bold);
-
-    italicFontAct = new QAction(tr("&Italic"),this);
-    italicFontAct->setShortcut(Qt::CTRL|Qt::Key_I);
-    italicFontAct->setStatusTip(tr("Make the text in the cell italic"));
-
-    connect(italicFontAct,&QAction::triggered,this, &GoogleSheetsModifier::tableView_Action_italic);
-
-    standardFontAct = new QAction(tr("Sta&ndard"),this);
-    standardFontAct->setShortcut(Qt::CTRL|Qt::Key_K);
-    standardFontAct->setStatusTip(tr("Make the text in the cell standard"));
-
-    connect(standardFontAct,&QAction::triggered,this, &GoogleSheetsModifier::tableView_Action_standard);
-
-    fontActGr = new QActionGroup(this);
-    fontActGr->addAction(boldFontAct);
-    fontActGr->addAction(italicFontAct);
-    fontActGr->addAction(standardFontAct);
+    }
     return;
 }

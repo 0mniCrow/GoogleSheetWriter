@@ -2,12 +2,26 @@
 
 GoogleSheetModel::GoogleSheetModel(QObject *tata):QAbstractTableModel(tata)
 {
-    dataHolder.resize(ROWS);
+    displayData.resize(ROWS);
     loadedData.resize(ROWS);
     for(int i = 0; i<ROWS;i++)
     {
-        dataHolder[i].resize(COLUMNS);
+        displayData[i].resize(COLUMNS);
         loadedData[i].resize(COLUMNS);
+    }
+    flashChanges = false;
+    controlModifier=false;
+    return;
+}
+
+GoogleSheetModel::GoogleSheetModel(unsigned int rows, unsigned int columns, QObject* tata):QAbstractTableModel(tata)
+{
+    displayData.resize(rows);
+    loadedData.resize(rows);
+    for(unsigned int i = 0; i<rows;i++)
+    {
+        displayData[i].resize(columns);
+        loadedData[i].resize(columns);
     }
     flashChanges = false;
     controlModifier=false;
@@ -33,11 +47,11 @@ bool GoogleSheetModel::checkIndex(const QModelIndex& index) const
     {
         return false;
     }
-    if(index.row()>=dataHolder.size())
+    if(index.row()>=displayData.size())
     {
         return false;
     }
-    if(index.column()>=dataHolder.at(index.row()).size())
+    if(index.column()>=displayData.at(index.row()).size())
     {
         return false;
     }
@@ -52,18 +66,32 @@ QVariant GoogleSheetModel::data(const QModelIndex &index, int role) const
     }
     else if(role==Qt::DisplayRole||role==Qt::EditRole)
     {
-        return dataHolder.at(index.row()).at(index.column());
+        return displayData.at(index.row()).at(index.column()).data;
+    }
+    else if(role==Qt::FontRole)
+    {
+        if(displayData.at(index.row()).at(index.column()).fontFlag==CellObj::boldFont)
+        {
+            QFont bold;
+            bold.setBold(true);
+            return bold;
+        }
+        else if(displayData.at(index.row()).at(index.column()).fontFlag==CellObj::italicFont)
+        {
+            QFont italic;
+            italic.setItalic(true);
+            return italic;
+        }
     }
     else if(role==Qt::BackgroundRole)
     {
-        QMultiMap<int,int>::const_iterator it = selectedCells.find(index.row(),index.column());
-        if(it!=selectedCells.constEnd())
+        if(displayData.at(index.row()).at(index.column()).isSelected)
         {                                           //Калі элемент выбраны з клавішай Ctrl
             return QColor(255,253,158);             //ён трапляе ў спіс на індывідуальны запіс
         }
         else if(flashChanges)
         {
-            QVariant dataInfo(dataHolder.at(index.row()).at(index.column()));
+            QVariant dataInfo(displayData.at(index.row()).at(index.column()).data);
             if(!dataInfo.isNull())                      //Калі вуза не пустая
             {
                 if(index.row()<loadedData.size())       //Калі індэкс запытваемай вузы меньш за даўжыню табліцы,
@@ -101,7 +129,7 @@ bool GoogleSheetModel::setData(const QModelIndex& index, const QVariant &value, 
                 subValue.clear();
             }
         }
-        dataHolder[index.row()][index.column()].setValue(subValue);
+        displayData[index.row()][index.column()].data.setValue(subValue);
         emit dataChanged(index,index);
         return true;
     }
@@ -111,14 +139,14 @@ bool GoogleSheetModel::setData(const QModelIndex& index, const QVariant &value, 
 int GoogleSheetModel::rowCount(const QModelIndex& parent) const
 {
     Q_UNUSED(parent)
-    return dataHolder.size();
+    return displayData.size();
 }
 int GoogleSheetModel::columnCount(const QModelIndex& parent) const
 {
     Q_UNUSED(parent)
-    if(dataHolder.size()>0)
+    if(displayData.size()>0)
     {
-        return dataHolder.at(0).size();
+        return displayData.at(0).size();
     }
     return 0;
 }
@@ -153,9 +181,8 @@ Qt::ItemFlags GoogleSheetModel::flags(const QModelIndex& index) const
     if(!index.isValid())
     {
         return Qt::ItemIsDropEnabled;
-    } else
-//    if((index.row()<dataHolder.size())&&
-//            (index.column()<dataHolder.at(0).size()))
+    }
+    else
     {
         return QAbstractTableModel::flags(index)|Qt::ItemIsEditable|Qt::ItemIsEnabled|Qt::ItemIsDragEnabled;
     }
@@ -166,9 +193,9 @@ bool GoogleSheetModel::insertColumns(int column, int count, const QModelIndex& p
     if(count)
     {
         beginInsertColumns(parent,column,column+count-1);
-        for(QVector<QVariant>& i:dataHolder)
+        for(QVector<CellObj>&i:displayData)
         {
-            i.insert(column,count,QVariant());
+            i.insert(column,count,CellObj());
         }
         endInsertColumns();
         return true;
@@ -181,12 +208,12 @@ bool GoogleSheetModel::insertRows(int row, int count, const QModelIndex& parent)
     if(count)
     {
         int columns = 0;
-        if(dataHolder.size())
+        if(displayData.size())
         {
-            columns = dataHolder.at(0).size();
+            columns = displayData.at(0).size();
         }
         beginInsertRows(parent,row,row+count-1);
-        dataHolder.insert(row,count,QVector<QVariant>(columns));
+        displayData.insert(row,count,QVector<CellObj>(columns));
         endInsertRows();
         return true;
     }
@@ -195,17 +222,17 @@ bool GoogleSheetModel::insertRows(int row, int count, const QModelIndex& parent)
 
 bool GoogleSheetModel::removeColumns(int column, int count, const QModelIndex& parent)
 {
-    if(dataHolder.isEmpty())
+    if(displayData.isEmpty())
     {
         return false;
     }
-    if((column+count)>dataHolder.at(0).size())
+    if((column+count)>displayData.at(0).size())
     {
         return false;
     }
 
     beginRemoveColumns(parent,column,column+count-1);
-    for(QVector<QVariant>& i:dataHolder)
+    for(QVector<CellObj>& i:displayData)
     {
         i.remove(column,count);
     }
@@ -215,17 +242,17 @@ bool GoogleSheetModel::removeColumns(int column, int count, const QModelIndex& p
 
 bool GoogleSheetModel::removeRows(int row, int count, const QModelIndex& parent)
 {
-    if(dataHolder.isEmpty())
+    if(displayData.isEmpty())
     {
         return false;
     }
-    if((row+count)>dataHolder.size())
+    if((row+count)>displayData.size())
     {
         return false;
     }
 
     beginRemoveRows(parent,row,row+count-1);
-    dataHolder.remove(row,count);
+    displayData.remove(row,count);
     endRemoveRows();
     return true;
 }
@@ -233,28 +260,28 @@ bool GoogleSheetModel::removeRows(int row, int count, const QModelIndex& parent)
 bool GoogleSheetModel::loadDataToModel(QVector<QVector<QVariant>>& data)
 {
     loadedData = std::move(data);
-    if(loadedData.size()>dataHolder.size())
+    if(loadedData.size()>displayData.size())
     {
-        insertRows(dataHolder.size()-1,(loadedData.size()-dataHolder.size()),
+        insertRows(displayData.size()-1,(loadedData.size()-displayData.size()),
                    QModelIndex());
     }
-    else if(loadedData.size()<dataHolder.size())
+    else if(loadedData.size()<displayData.size())
     {
-        removeRows(0,dataHolder.size()-loadedData.size(),QModelIndex());
+        removeRows(0,displayData.size()-loadedData.size(),QModelIndex());
     }
     if(loadedData.size())       //Наладжваецца памер галоўнай табліцы адносна да запампованай
     {
-        if(dataHolder.size())
+        if(displayData.size())
         {
-            if(loadedData.at(0).size()>dataHolder.at(0).size())
+            if(loadedData.at(0).size()>displayData.at(0).size())
             {
-                insertColumns(dataHolder.at(0).size()-1,
-                              loadedData.at(0).size()-dataHolder.at(0).size(),
+                insertColumns(displayData.at(0).size()-1,
+                              loadedData.at(0).size()-displayData.at(0).size(),
                               QModelIndex());
             }
-            else if(loadedData.at(0).size()<dataHolder.at(0).size())
+            else if(loadedData.at(0).size()<displayData.at(0).size())
             {
-                removeColumns(0,dataHolder.at(0).size()-loadedData.at(0).size(),
+                removeColumns(0,displayData.at(0).size()-loadedData.at(0).size(),
                               QModelIndex());
             }
         }
@@ -263,44 +290,15 @@ bool GoogleSheetModel::loadDataToModel(QVector<QVector<QVariant>>& data)
             insertColumns(0,loadedData.at(0).size(),QModelIndex());
         }
     }
-    else if(dataHolder.size())
+    else if(displayData.size())
     {
-        removeColumns(0,dataHolder.size(),QModelIndex());
+        removeColumns(0,displayData.size(),QModelIndex());
     }
-    for(int i = 0; i<dataHolder.size();i++)
+    for(int i = 0; i<displayData.size();i++)
     {
-        for(int j = 0; j<dataHolder.at(i).size();j++)
+        for(int j = 0; j<displayData.at(i).size();j++)
         {
             setData(createIndex(i,j),loadedData[i][j],Qt::EditRole);
-        }
-    }
-    return true;
-}
-
-bool GoogleSheetModel::downloadSepDataFromModel(QVector<QVector<QVariant>>& container) const
-{
-    if(selectedCells.isEmpty())
-    {
-        return false;
-    }
-    if(dataHolder.isEmpty())
-    {
-        return false;
-    }
-    container.clear();
-    container.resize(dataHolder.size());
-    for(QVector<QVariant>& row:container)
-    {
-        row.resize(dataHolder.at(0).size());
-    }
-    for(int row = 0; row<dataHolder.size();row++)
-    {
-        for(int col = 0; col<dataHolder.at(row).size();col++)
-        {
-            if(selectedCells.constFind(row,col)!=selectedCells.constEnd())
-            {
-                container[row][col]=dataHolder.at(row).at(col);
-            }
         }
     }
     return true;
@@ -314,16 +312,43 @@ bool GoogleSheetModel::loadSeparatedData(QVector<QVector<QVariant>>& data)
         {
             if(data.at(i).at(j).isValid())
             {
-                dataHolder[i][j] = loadedData[i][j] = data.at(i).at(j);
+                displayData[i][j].data = loadedData[i][j] = data.at(i).at(j);
+                emit dataChanged(createIndex(i,j),createIndex(i,j));
             }
         }
     }
     return true;
 }
 
-bool GoogleSheetModel::downloadDataFromModel(QVector<QVector<QVariant>>& container) const
+bool GoogleSheetModel::downloadDataFromModel(QVector<QVector<QVariant>>& container, bool selectedOnly) const
 {
-    container=dataHolder;
+    if(displayData.isEmpty())
+    {
+        return false;
+    }
+    container.clear();
+    container.resize(displayData.size());
+    for(QVector<QVariant>& row:container)
+    {
+        row.resize(displayData.at(0).size());
+    }
+    for(int row = 0; row<displayData.size();row++)
+    {
+        for(int col = 0; col<displayData.at(row).size();col++)
+        {
+            if(selectedOnly)
+            {
+                if(displayData.at(row).at(col).isSelected)
+                {
+                    container[row][col]=displayData.at(row).at(col).data;
+                }
+            }
+            else
+            {
+                container[row][col]=displayData.at(row).at(col).data;
+            }
+        }
+    }
     return true;
 }
 
@@ -360,7 +385,7 @@ QMimeData* GoogleSheetModel::mimeData(const QModelIndexList& indexes) const
             addrmap.insert(index.row(),index.column());
         }
     } 
-    if(dataHolder.isEmpty()||addrmap.isEmpty())
+    if(displayData.isEmpty()||addrmap.isEmpty())
     {
         return nullptr;
     }
@@ -376,8 +401,8 @@ QMimeData* GoogleSheetModel::mimeData(const QModelIndexList& indexes) const
         }
     }
     //Праверка, ці не вылучана табліца цалкам
-    bool rowsSelected = adjustment==dataHolder.at(0).size();
-    bool columnsSelected = rows.size()==dataHolder.size();
+    bool rowsSelected = adjustment==displayData.at(0).size();
+    bool columnsSelected = rows.size()==displayData.size();
     if(rowsSelected&&columnsSelected)
     {
         return nullptr;
@@ -398,7 +423,7 @@ QMimeData* GoogleSheetModel::mimeData(const QModelIndexList& indexes) const
             std::sort(columns.begin(),columns.end());
             foreach(const int column,columns)
             {
-                sentRow.append(dataHolder.at(row).at(column));
+                sentRow.append(displayData.at(row).at(column).data);
             }
             sentData.append(sentRow);
         }
@@ -586,9 +611,9 @@ bool GoogleSheetModel::moveRows(const QModelIndex& sourceParent, int sourceRow, 
     }
     for(int i = 0; i<count;i++)
     {
-        dataHolder.insert(destChild+i,dataHolder.at(sourceRow));
+        displayData.insert(destChild+i,displayData.at(sourceRow));
         int removeIndex = destChild>sourceRow?sourceRow:sourceRow+1;
-        dataHolder.removeAt(removeIndex);
+        displayData.removeAt(removeIndex);
     }
     endMoveRows();
     return true;
@@ -600,7 +625,7 @@ bool GoogleSheetModel::moveColumns(const QModelIndex& sourceParent, int sourceCo
     {
         return false;
     }
-    for(QVector<QVariant>& row:dataHolder)
+    for(QVector<CellObj>& row:displayData)
     {
         for(int i = 0; i<count;i++)
         {
@@ -624,14 +649,13 @@ void GoogleSheetModel::setNewSelectedIndex(QModelIndex selectedIndex)
 {
     if(controlModifier)
     {
-        QMultiMap<int,int>::const_iterator it = selectedCells.constFind(selectedIndex.row(),selectedIndex.column());
-        if(it==selectedCells.constEnd())
+        if(displayData.at(selectedIndex.row()).at(selectedIndex.column()).isSelected)
         {
-            selectedCells.insert(selectedIndex.row(),selectedIndex.column());
+            displayData[selectedIndex.row()][selectedIndex.column()].isSelected = false;
         }
         else
         {
-            selectedCells.erase(it);
+            displayData[selectedIndex.row()][selectedIndex.column()].isSelected = true;
         }
         emit dataChanged(selectedIndex,selectedIndex);
     }
@@ -642,16 +666,16 @@ QString GoogleSheetModel::getSelectedIndexes() const
 {
     QString answer;
     const char frst_ltr = 'A';
-    QList<int> rows = selectedCells.uniqueKeys();
-    foreach(int row,rows)
+    for(int row = 0; row<displayData.size();row++)
     {
-        QList<int> columns = selectedCells.values(row);
-        std::sort(columns.begin(),columns.end());
-        foreach(int column, columns)
+        for(int col = 0; col<displayData.at(row).size();col++)
         {
-            char letter = frst_ltr+column;
-            QString cell(QString(letter)+QString::number(row+1/*У гугла шэрагі пачынаюцца з 1, а ў масіве з 0, таму "+1"*/)+',');
-            answer.append(cell);
+            if(displayData.at(row).at(col).isSelected)
+            {
+                char letter = frst_ltr+col;
+                QString cell(QString(letter)+QString::number(row+1/*У гугла шэрагі пачынаюцца з 1, а ў масіве з 0, таму "+1"*/)+',');
+                answer.append(cell);
+            }
         }
     }
     return answer;
@@ -661,7 +685,7 @@ QString GoogleSheetModel::getSelectedIndexes() const
 void GoogleSheetModel::cut(const QModelIndex& index)
 {
     copy(index);
-    dataHolder[index.row()][index.column()].clear();
+    displayData[index.row()][index.column()].data.clear();
     emit dataChanged(index,index);
     return;
 }
@@ -669,7 +693,7 @@ void GoogleSheetModel::cut(const QModelIndex& index)
 void GoogleSheetModel::copy(const QModelIndex& index)
 {
     QClipboard * clipboard(QApplication::clipboard());
-    clipboard->setText(dataHolder[index.row()][index.column()].toString());
+    clipboard->setText(displayData[index.row()][index.column()].data.toString());
     return;
 }
 
@@ -679,22 +703,19 @@ void GoogleSheetModel::paste(const QModelIndex& index)
     const QMimeData * mimedata(clipboard->mimeData());
     if(mimedata->hasText())
     {
-        dataHolder[index.row()][index.column()].setValue(mimedata->text());
+        displayData[index.row()][index.column()].data.setValue(mimedata->text());
         emit dataChanged(index,index);
     }
     return;
 }
-
-void GoogleSheetModel::bold_font(const QModelIndex& index)
+void GoogleSheetModel::setFont(const QModelIndex& index, CellObj::fontFlags font_type)
 {
-    return;
-}
-void GoogleSheetModel::italic_font(const QModelIndex& index)
-{
-    return;
-}
-
-void GoogleSheetModel::standard_font(const QModelIndex& index)
-{
-    return;
+    if(displayData.at(index.row()).at(index.column()).fontFlag!=font_type)
+    {
+        displayData[index.row()][index.column()].fontFlag=font_type;
+    }
+    else
+    {
+        displayData[index.row()][index.column()].fontFlag=CellObj::noFont;
+    }
 }
