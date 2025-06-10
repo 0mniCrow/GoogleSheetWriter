@@ -96,6 +96,7 @@ private slots:
 
     void saveSettings();
     void loadSettings();
+    void loadSettings(int & rows,int & columns);
 
     void checkRadioGroup();
     void setChangesFlash();

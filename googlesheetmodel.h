@@ -1,6 +1,9 @@
 #ifndef GOOGLESHEETMODEL_H
 #define GOOGLESHEETMODEL_H
 
+#define ROWS 4
+#define COLUMNS 4
+
 #include <QAbstractItemModel>
 #include <QAbstractTableModel>
 #include <QApplication>
@@ -13,8 +16,7 @@
 #include <QColor>
 #include <QClipboard>
 #include <QFont>
-#define ROWS 6
-#define COLUMNS 5
+
 
 struct CellObj
 {
@@ -35,6 +37,7 @@ private:
     bool controlModifier;
     bool checkIndex(const QModelIndex& index) const;
 public:
+
     GoogleSheetModel(QObject * tata = nullptr);
     GoogleSheetModel(unsigned int rows, unsigned int columns, QObject* tata = nullptr);
     ~GoogleSheetModel();
@@ -64,6 +67,7 @@ public:
     void setChangesToFlash(bool parameter);
     void setControlModifier(bool controlmod);
     QString getSelectedIndexes() const;
+    void rearrangeTable(int rows, int columns);
 public slots:
     void setNewSelectedIndex(QModelIndex selectedIndex);
 

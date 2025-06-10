@@ -2,13 +2,16 @@
 
 GoogleSheetModel::GoogleSheetModel(QObject *tata):QAbstractTableModel(tata)
 {
-    displayData.resize(ROWS);
-    loadedData.resize(ROWS);
-    for(int i = 0; i<ROWS;i++)
+    /*
+    displayData.resize(start_rows);
+    loadedData.resize(start_rows);
+    for(int i = 0; i<start_rows;i++)
     {
-        displayData[i].resize(COLUMNS);
-        loadedData[i].resize(COLUMNS);
+        displayData[i].resize(start_columns);
+        loadedData[i].resize(start_columns);
     }
+    */
+    rearrangeTable(ROWS,COLUMNS);
     flashChanges = false;
     controlModifier=false;
     return;
@@ -25,6 +28,18 @@ GoogleSheetModel::GoogleSheetModel(unsigned int rows, unsigned int columns, QObj
     }
     flashChanges = false;
     controlModifier=false;
+    return;
+}
+
+void GoogleSheetModel::rearrangeTable(int rows, int columns)
+{
+    displayData.resize(rows);
+    loadedData.resize(rows);
+    for(int i = 0; i<rows;i++)
+    {
+        displayData[i].resize(columns);
+        loadedData[i].resize(columns);
+    }
     return;
 }
 

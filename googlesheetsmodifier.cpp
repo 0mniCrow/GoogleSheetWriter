@@ -21,6 +21,13 @@ GoogleSheetsModifier::GoogleSheetsModifier(QWidget *parent) :
     checkRadioGroup();
     setWriteOption();
     createConnections();
+    int start_rows = 0;
+    int start_columns = 0;
+    loadSettings(start_rows,start_columns);
+    if(start_rows&&start_columns)
+    {
+        model->rearrangeTable(start_rows,start_columns);
+    }
     loadSettings();
     return;
 }
@@ -469,6 +476,8 @@ void GoogleSheetsModifier::saveSettings()
 {
     QMap<QString,QString> settings;
     QByteArray data;
+    settings.insert("Table_rows",QString::number(model->rowCount(QModelIndex())));
+    settings.insert("Table_columns",QString::number(model->columnCount(QModelIndex())));
     settings.insert("API_Key_filename",ui->lineAPI_key_filename->text());
     settings.insert("OAuth2_filename",ui->lineEdit_OAuth_filename->text());
     settings.insert("Sheet_Name",ui->lineSheetName->text());
@@ -493,6 +502,35 @@ void GoogleSheetsModifier::saveSettings()
     }
     return;
 }
+void GoogleSheetsModifier::loadSettings(int &rows, int &columns)
+{
+    QByteArray data;
+    QMap<QString,QString> settings;
+
+    if(!filemanager.loadPreferences(data))
+    {
+        getErrMsg("Application can't load settings;");
+        return;
+    }
+    QString err;
+    if(!ParseXML_XMLToData(data,settings,&err))
+    {
+        getErrMsg(err);
+        return;
+    }
+    for(QMap<QString,QString>::const_iterator it = settings.constBegin();
+        it!= settings.constEnd();it++)
+    if(it.key()=="Table_rows")
+    {
+        rows = it.value().toInt();
+    }
+    else if(it.key()=="Table_columns")
+    {
+        columns = it.value().toInt();
+    }
+    return;
+}
+
 void GoogleSheetsModifier::loadSettings()
 {
     /*
@@ -517,8 +555,6 @@ void GoogleSheetsModifier::loadSettings()
         getErrMsg(err);
         return;
     }
-
-
     for(QMap<QString,QString>::const_iterator it = settings.constBegin();
         it!= settings.constEnd();it++/*const QString& str:settings*/)
     {
