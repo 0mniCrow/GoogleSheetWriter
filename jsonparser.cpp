@@ -314,3 +314,15 @@ QString JSONparser::getLastError() const
     return lastError;
 }
 
+bool JSONparser::parseFontsToRequest(const QVector<QVector<QFont>>& data, const QString &sheetName, QByteArray& container)
+{
+    if(!data.size())
+    {
+        lastError = "parseData is empty";
+        return false;
+    }
+    QJsonDocument mainDoc;
+    QJsonObject mainObj;
+    QJsonArray requests;
+    return true;
+}

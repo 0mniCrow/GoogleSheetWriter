@@ -22,9 +22,10 @@ struct CellObj
 {
     enum fontFlags{noFont = 0, boldFont = 1, italicFont =2};
     QVariant data;
+    QFont font;
     bool isSelected;
     char fontFlag;
-    CellObj():data(),isSelected(false),fontFlag(noFont){}
+    CellObj():data(),font(),isSelected(false),fontFlag(noFont){}
 };
 
 class GoogleSheetModel:public QAbstractTableModel
@@ -61,8 +62,9 @@ public:
     bool dropMimeData(const QMimeData* data, Qt::DropAction action,
                       int row, int column, const QModelIndex& parent) override;
     QMimeData*  mimeData(const QModelIndexList& indexex) const override;
-    bool loadDataToModel(QVector<QVector<QVariant>>& data);
-    bool loadSeparatedData(QVector<QVector<QVariant>>& data);
+    void loadDataToModel(QVector<QVector<QVariant>>& data);
+    void loadSeparatedData(QVector<QVector<QVariant>>& data);
+    void loadFontsFromModel(QVector<QVector<QFont>>& data) const;
     bool downloadDataFromModel(QVector<QVector<QVariant>>& container,bool selectedOnly = false) const;
     void setChangesToFlash(bool parameter);
     void setControlModifier(bool controlmod);
@@ -75,7 +77,9 @@ public slots:
     void cut(const QModelIndex& index);
     void copy(const QModelIndex& index);
     void paste(const QModelIndex& index);
-    void setFont(const QModelIndex& index, CellObj::fontFlags font_type);
+    void setFontWeight(const QModelIndex& index, QFont::Weight font_type);
+    void setFontStyle(const QModelIndex& index, QFont::Style font_style);
+    void setFont(const QModelIndex& index, const QString& font_name);
 };
 
 #endif // GOOGLESHEETMODEL_H

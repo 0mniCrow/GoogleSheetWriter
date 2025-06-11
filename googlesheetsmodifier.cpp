@@ -434,11 +434,13 @@ void GoogleSheetsModifier::googleSheetAPI_getFinishSig(const QByteArray& data)
     case JSONparser::JSONregularAns:
     {
         model->loadDataToModel(modelData);
+        ui->tableGoogleSheets->resizeColumnsToContents();
     }
         break;
     case JSONparser::JSONseparatedCell:
     {
         model->loadSeparatedData(modelData);
+        ui->tableGoogleSheets->resizeColumnsToContents();
     }
         break;
     default:
@@ -735,11 +737,22 @@ void GoogleSheetsModifier::tableView_catchContextMenuCall(const QPoint& point)
     QAction* cutAct = contextMenu.addAction("Cut");
     QAction* copyAct = contextMenu.addAction("Copy");
     QAction* pasteAct = contextMenu.addAction("Paste");
-    QMenu* submenu = contextMenu.addMenu("Fonts");
-    QAction* boldFontAct = submenu->addAction("Bold");
-    QAction* italicFontAct = submenu->addAction("Italic");
-    QAction* standardFontAct = submenu->addAction("Standard");
-
+    QMenu* submenu_styles = contextMenu.addMenu("Styles");
+    QAction* boldFontAct = submenu_styles->addAction("Bold");
+    QAction* italicFontAct = submenu_styles->addAction("Italic");
+    QAction* standardFontAct = submenu_styles->addAction("Standard");
+    QMenu* submenu_font = contextMenu.addMenu("Fonts");
+    QAction* timesFontAct = submenu_font->addAction("Times");
+    QAction* helveticaFontAct = submenu_font->addAction("Georgia");
+    QAction* arialFontAct = submenu_font->addAction("Arial");
+    QAction* comicsansFontAct = submenu_font->addAction("Comic Sans MS");
+    QAction* defauldFontAct = submenu_font->addAction("Default");
+//    QStringList fonts(QFontDatabase::families(QFontDatabase::Cyrillic));
+//    foreach(const QString& font,fonts)
+//    {
+//        getErrMsg(font);
+//    }
+    //QList<QFontDatabase::WritingSystem> systems(db.writingSystems());
     QAction* selectedAction(contextMenu.exec(ui->tableGoogleSheets->viewport()->mapToGlobal(point)));
     if(selectedAction == cutAct)
     {
@@ -755,18 +768,36 @@ void GoogleSheetsModifier::tableView_catchContextMenuCall(const QPoint& point)
     }
     else if(selectedAction == boldFontAct)
     {
-        model->setFont(index,CellObj::boldFont);
-        //model->bold_font(index);
+        model->setFontWeight(index,QFont::Bold);
     }
     else if(selectedAction == italicFontAct)
     {
-        model->setFont(index,CellObj::italicFont);
-        //model->italic_font(index);
+        model->setFontStyle(index,QFont::StyleItalic);
     }
     else if(selectedAction == standardFontAct)
     {
-        model->setFont(index,CellObj::noFont);
-        //model->standard_font(index);
+        model->setFontWeight(index,QFont::Normal);
+        model->setFontStyle(index,QFont::StyleNormal);
+    }
+    else if(selectedAction == timesFontAct)
+    {
+        model->setFont(index,"Times New Roman");
+    }
+    else if(selectedAction == helveticaFontAct)
+    {
+        model->setFont(index,"Georgia");
+    }
+    else if(selectedAction == arialFontAct)
+    {
+        model->setFont(index,"Arial");
+    }
+    else if(selectedAction == comicsansFontAct)
+    {
+        model->setFont(index,"Comic Sans MS");
+    }
+    else if(selectedAction == defauldFontAct)
+    {
+        model->setFont(index,QString());
     }
     else
     {

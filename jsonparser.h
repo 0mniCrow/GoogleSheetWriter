@@ -19,6 +19,8 @@ class JSONparser
 private:
     QString lastError;
     bool parseJSONAnswerToText(QJsonObject& mainObj, QString& container);
+    int checkNextCol(const QString& prev_param, int prevCount);
+    int checkNextRow(const QString& prev_param, int prevCount);
 public:
     JSONparser();
     ~JSONparser();
@@ -26,6 +28,7 @@ public:
     bool parseDataToJSON(const QVector<QVector<QVariant>>& data, const QString& sheetName, QByteArray& container);
     answerType parseJSONToData(const QByteArray& data, QVector<QVector<QVariant>>& container);
     bool parseSepDataToJSON(const QVector<QVector<QVariant> > &data, const QString &sheetName, QByteArray &container);
+    bool parseFontsToRequest(const QVector<QVector<QFont>>& data,const QString &sheetName, QByteArray& container);
 
     QString getLastError() const;
 

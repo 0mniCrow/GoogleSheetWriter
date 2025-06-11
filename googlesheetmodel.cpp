@@ -85,6 +85,8 @@ QVariant GoogleSheetModel::data(const QModelIndex &index, int role) const
     }
     else if(role==Qt::FontRole)
     {
+        return displayData.at(index.row()).at(index.column()).font;
+        /*
         if(displayData.at(index.row()).at(index.column()).fontFlag==CellObj::boldFont)
         {
             QFont bold;
@@ -97,6 +99,7 @@ QVariant GoogleSheetModel::data(const QModelIndex &index, int role) const
             italic.setItalic(true);
             return italic;
         }
+        */
     }
     else if(role==Qt::BackgroundRole)
     {
@@ -272,7 +275,7 @@ bool GoogleSheetModel::removeRows(int row, int count, const QModelIndex& parent)
     return true;
 }
 
-bool GoogleSheetModel::loadDataToModel(QVector<QVector<QVariant>>& data)
+void GoogleSheetModel::loadDataToModel(QVector<QVector<QVariant>>& data)
 {
     loadedData = std::move(data);
     if(loadedData.size()>displayData.size())
@@ -316,10 +319,10 @@ bool GoogleSheetModel::loadDataToModel(QVector<QVector<QVariant>>& data)
             setData(createIndex(i,j),loadedData[i][j],Qt::EditRole);
         }
     }
-    return true;
+    return;
 }
 
-bool GoogleSheetModel::loadSeparatedData(QVector<QVector<QVariant>>& data)
+void GoogleSheetModel::loadSeparatedData(QVector<QVector<QVariant>>& data)
 {
     for(int i = 0; i<data.size();i++)
     {
@@ -332,7 +335,22 @@ bool GoogleSheetModel::loadSeparatedData(QVector<QVector<QVariant>>& data)
             }
         }
     }
-    return true;
+    return;
+}
+
+void GoogleSheetModel::loadFontsFromModel(QVector<QVector<QFont>>& data) const
+{
+    data.clear();
+    for(int i = 0; i<displayData.size();i++)
+    {
+        QVector<QFont> row;
+        for(int j = 0; j<displayData.at(i).size();j++)
+        {
+            row.append(displayData.at(i).at(j).font);
+        }
+        data.append(row);
+    }
+    return;
 }
 
 bool GoogleSheetModel::downloadDataFromModel(QVector<QVector<QVariant>>& container, bool selectedOnly) const
@@ -723,14 +741,52 @@ void GoogleSheetModel::paste(const QModelIndex& index)
     }
     return;
 }
-void GoogleSheetModel::setFont(const QModelIndex& index, CellObj::fontFlags font_type)
+void GoogleSheetModel::setFontWeight(const QModelIndex& index, QFont::Weight font_type)
 {
-    if(displayData.at(index.row()).at(index.column()).fontFlag!=font_type)
+    if(displayData.at(index.row()).at(index.column()).font.weight()==font_type)
     {
-        displayData[index.row()][index.column()].fontFlag=font_type;
+        displayData[index.row()][index.column()].font.setWeight(QFont::Normal);
     }
     else
     {
-        displayData[index.row()][index.column()].fontFlag=CellObj::noFont;
+        displayData[index.row()][index.column()].font.setWeight(font_type);
     }
+    emit dataChanged(index,index);
+//    if(displayData.at(index.row()).at(index.column()).fontFlag!=font_type)
+//    {
+//        displayData[index.row()][index.column()].fontFlag=font_type;
+//    }
+//    else
+//    {
+//        displayData[index.row()][index.column()].fontFlag=CellObj::noFont;
+//    }
+    return;
+}
+
+void GoogleSheetModel::setFontStyle(const QModelIndex& index, QFont::Style font_style)
+{
+    if(displayData.at(index.row()).at(index.column()).font.style()==font_style)
+    {
+        displayData[index.row()][index.column()].font.setStyle(QFont::StyleNormal);
+    }
+    else
+    {
+        displayData[index.row()][index.column()].font.setStyle(font_style);
+    }
+    emit dataChanged(index,index);
+    return;
+}
+
+void GoogleSheetModel::setFont(const QModelIndex& index, const QString& font_name)
+{
+    if(font_name.isEmpty())
+    {
+        displayData[index.row()][index.column()].font.setFamily(QFont().family());
+    }
+    else
+    {
+        displayData[index.row()][index.column()].font.setFamily(font_name);
+    }
+    emit dataChanged(index,index);
+    return;
 }

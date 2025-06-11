@@ -19,6 +19,7 @@
 #include <QMenu>
 #include <QAction>
 #include <QActionGroup>
+#include <QFontDatabase>
 
 namespace Ui {
 class GoogleSheetsModifier;
