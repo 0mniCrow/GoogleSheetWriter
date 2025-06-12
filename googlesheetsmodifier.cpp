@@ -62,6 +62,7 @@ void GoogleSheetsModifier::createConnections()
     connect(communicator,SIGNAL(errormsg(QString)),this,SLOT(getErrMsg(QString)));
     connect(communicator,SIGNAL(finished(QByteArray)),this,SLOT(googleSheetAPI_getFinishSig(QByteArray)));
     connect(ui->ButtonAuth,SIGNAL(clicked(bool)),this,SLOT(googleSheetAPI_OAuth2_authorize()));
+    connect(ui->Button_ReadSheetIDs,SIGNAL(clicked(bool)),this,SLOT(googleSheetAPI_ReadSheetIDs()));
     connect(ui->ButtonSave,SIGNAL(clicked(bool)),this,SLOT(tableView_saveCurData_toFile()));
     connect(ui->ButtonLoad,SIGNAL(clicked(bool)),this,SLOT(tableView_loadData_fromFile()));
     connect(ui->radioButtonAPI_key,SIGNAL(clicked(bool)),this,SLOT(checkRadioGroup()));
@@ -373,6 +374,17 @@ void GoogleSheetsModifier::googleSheetAPI_read()
     return;
 }
 
+void GoogleSheetsModifier::googleSheetAPI_ReadSheetIDs()
+{
+    if(!checkFields())
+    {
+        getErrMsg("Read method Error: Nessesary fields are empty;");
+        return;
+    }
+    communicator->GetSheetIdsRequest(ui->lineSpreadSheetID->text(),ui->line_API_Key->text());
+    return;
+}
+
 void GoogleSheetsModifier::tableView_saveCurData_toFile()
 {
     QString lastpath(filemanager.getlastfilepath());
@@ -441,6 +453,23 @@ void GoogleSheetsModifier::googleSheetAPI_getFinishSig(const QByteArray& data)
     {
         model->loadSeparatedData(modelData);
         ui->tableGoogleSheets->resizeColumnsToContents();
+    }
+        break;
+    case JSONparser::JSONSheets:
+    {
+        QMap<QString,int> sheetIDs;
+        QStringList listOfIds(parser.getLastError().split("//",Qt::SkipEmptyParts));
+        foreach(const QString& val,listOfIds)
+        {
+            QStringList pair(val.split(",",Qt::SkipEmptyParts));
+            sheetIDs.insert(pair.at(0),pair.at(1).toInt());
+        }
+        QMap<QString,int>::iterator it = sheetIDs.begin();
+        while(it!=sheetIDs.end())
+        {
+            getErrMsg(it.key()+" : "+QString::number(it.value()));
+            it++;
+        }
     }
         break;
     default:

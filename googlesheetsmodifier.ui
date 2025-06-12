@@ -253,6 +253,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="Button_ReadSheetIDs">
+       <property name="text">
+        <string>Read Sheet ID's</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QCheckBox" name="checkBox_Selected_cells_work">
        <property name="text">
         <string>Read/Write selected cells</string>

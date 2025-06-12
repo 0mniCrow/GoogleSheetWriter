@@ -45,6 +45,7 @@ public slots:
     void readRequest(const QString& SSID, const QString& SSname,
                     const QString& range, const QString& APIkey = QString());
     void AuthorizeRequest(const QString& Client_ID,const QString& Client_Secret);
+    void GetSheetIdsRequest(const QString& SSID, const QString& APIkey = QString());
     void setFlags(unsigned char flags);
 signals:
     void finished(const QByteArray& answer);

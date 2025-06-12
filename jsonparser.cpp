@@ -253,6 +253,18 @@ JSONparser::answerType JSONparser::parseJSONToData(const QByteArray& data, QVect
         }
         return JSONseparatedCell;
     }
+    else if(mainObj.contains("sheets"))
+    {
+        lastError.clear();
+        QJsonArray sheets(mainObj.value("sheets").toArray());
+        for(int i =0;i<sheets.size();i++)
+        {
+            QJsonObject sheet(sheets.at(i).toObject());
+            QJsonObject properties(sheet.value("properties").toObject());
+            lastError.append(properties.value("title").toString()+","+QString::number(properties.value("sheetId").toInt())+"//");
+        }
+        return JSONSheets;
+    }
     else
     {
         parseJSONAnswerToText(mainObj, lastError);
@@ -314,7 +326,7 @@ QString JSONparser::getLastError() const
     return lastError;
 }
 
-bool JSONparser::parseFontsToRequest(const QVector<QVector<QFont>>& data, const QString &sheetName, QByteArray& container)
+bool JSONparser::parseFontsToRequest(const QVector<QVector<QFont>>& data, const QString &sheetID, QByteArray& container)
 {
     if(!data.size())
     {
@@ -324,5 +336,19 @@ bool JSONparser::parseFontsToRequest(const QVector<QVector<QFont>>& data, const 
     QJsonDocument mainDoc;
     QJsonObject mainObj;
     QJsonArray requests;
+    QFont defaultFont;
+    for(int i = 0; i<data.size();i++)
+    {
+        for(int j = 0; j<data.at(i).size();j++)
+        {
+            if(data.at(i).at(j)!=defaultFont)
+            {
+                QJsonObject styleUpdate;
+                QJsonObject range;
+                range.insert("sheetId",sheetID);
+            }
+        }
+    }
+    mainObj.insert("requests",requests);
     return true;
 }

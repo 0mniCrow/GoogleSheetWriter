@@ -88,6 +88,7 @@ private slots:
     void googleSheetAPI_read();
     void googleSheetAPI_getFinishSig(const QByteArray& data);
     void googleSheetAPI_OAuth2_authorize();
+    void googleSheetAPI_ReadSheetIDs();
 
 
     void setProgressBar(qint64 val,qint64 total);

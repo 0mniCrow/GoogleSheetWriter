@@ -218,3 +218,42 @@ void HTTPScommunicator::readRequest(const QString& SSID, const QString& SSname,
     connect(reply,SIGNAL(downloadProgress(qint64,qint64)),this,SIGNAL(progress(qint64,qint64)));
     return;
 }
+
+
+void HTTPScommunicator::GetSheetIdsRequest(const QString& SSID,  const QString &APIkey)
+{
+    if(SSID.isEmpty())
+    {
+        emit errormsg("Recieving Sheet ID Error: SSID is missing;");
+        return;
+    }
+    if(!(httpflags&oauth2Method))
+    {
+        if(APIkey.isEmpty())
+        {
+            emit errormsg("Recieving Sheet ID Error: API key is required when API_key method is used;");
+            return;
+        }
+    }
+    QString urlstr("https://sheets.googleapis.com/v4/spreadsheets/"+SSID);
+    QUrl url(urlstr);
+    QNetworkRequest request;
+    QUrlQuery query;
+    query.addQueryItem("fields","sheets(properties(title,sheetId))");
+    if(httpflags&oauth2Method)
+    {
+        request.setUrl(url);
+        request.setHeader(QNetworkRequest::ContentTypeHeader,"application/json");
+        request.setRawHeader("Expect", "");
+        request.setRawHeader("Authorization",QString("Bearer "+authorazer.token()).toUtf8());
+    }
+    else
+    {
+        query.addQueryItem("key",APIkey);
+        url.setQuery(query);
+        request.setUrl(url);
+    }
+    QNetworkReply * reply = communicator->get(request);
+    connect(reply,SIGNAL(downloadProgress(qint64,qint64)),this,SIGNAL(progress(qint64,qint64)));
+    return;
+}
