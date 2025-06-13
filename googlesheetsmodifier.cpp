@@ -67,6 +67,8 @@ void GoogleSheetsModifier::createConnections()
     connect(ui->ButtonLoad,SIGNAL(clicked(bool)),this,SLOT(tableView_loadData_fromFile()));
     connect(ui->radioButtonAPI_key,SIGNAL(clicked(bool)),this,SLOT(checkRadioGroup()));
     connect(ui->radioButton_OAuth2,SIGNAL(clicked(bool)),this,SLOT(checkRadioGroup()));
+    connect(ui->radioButton_sheetName_Manual,SIGNAL(clicked(bool)),this,SLOT(checkRadioGroup()));
+    connect(ui->radioButton_sheetName_auto,SIGNAL(clicked(bool)),this,SLOT(checkRadioGroup()));
     connect(ui->Button_Save_settings,SIGNAL(clicked(bool)),this,SLOT(saveSettings()));
     connect(ui->Button_LoadSettings,SIGNAL(clicked(bool)),this,SLOT(loadSettings()));
     connect(ui->checkBox_FlashChanges,SIGNAL(stateChanged(int)),this,SLOT(setChangesFlash()));
@@ -262,12 +264,30 @@ void GoogleSheetsModifier::credentials_OAuth2_File_load()
 }
 
 
-bool GoogleSheetsModifier::checkFields()
+bool GoogleSheetsModifier::checkFields(bool ignore_sheetName)
 { 
-    if((ui->lineSheetName->text().isEmpty())||
-        (ui->lineSpreadSheetID->text().isEmpty()))
+    if(!ignore_sheetName)
     {
-        getErrMsg("Credentials missing Error: Sheet Name or Spread Sheet ID is empty;");
+        if(ui->radioButton_sheetName_Manual->isChecked())
+        {
+            if(ui->lineSheetName->text().isEmpty())
+            {
+                getErrMsg("Credentials missing Error: Sheet Name is missing;");
+                return false;
+            }
+        }
+        else if(ui->radioButton_sheetName_auto->isChecked())
+        {
+            if(!ui->comboBox_SheetNames->count())
+            {
+                getErrMsg("Credentials missing Error: Sheet Name is missing;");
+                return false;
+            }
+        }
+    }
+    if(ui->lineSpreadSheetID->text().isEmpty())
+    {
+        getErrMsg("Credentials missing Error: Spread Sheet ID is empty;");
         return false;
     }
     if(communicator->getFlags()&HTTPScommunicator::oauth2Method)
@@ -306,6 +326,9 @@ void GoogleSheetsModifier::googleSheetAPI_write()
     QVector<QVector<QVariant>> container;
     QByteArray jsonData;
     QString range;
+    QString sheetName(ui->radioButton_sheetName_Manual->isChecked()?
+                          ui->lineSheetName->text():
+                          ui->comboBox_SheetNames->currentText());
     if(ui->checkBox_Selected_cells_work->isChecked())
     {
         if(!model->downloadDataFromModel(container,true))
@@ -313,7 +336,8 @@ void GoogleSheetsModifier::googleSheetAPI_write()
             getErrMsg("Can't load separated data from model");
             return;
         }
-        if(!parser.parseSepDataToJSON(container,ui->lineSheetName->text(),jsonData))
+
+        if(!parser.parseSepDataToJSON(container,sheetName,jsonData))
         {
             getErrMsg(parser.getLastError());
             return;
@@ -323,7 +347,8 @@ void GoogleSheetsModifier::googleSheetAPI_write()
     else
     {
         model->downloadDataFromModel(container);
-        if(!parser.parseDataToJSON(container,ui->lineSheetName->text(),jsonData))
+
+        if(!parser.parseDataToJSON(container,sheetName,jsonData))
         {
             getErrMsg(parser.getLastError());
             return;
@@ -333,7 +358,7 @@ void GoogleSheetsModifier::googleSheetAPI_write()
     }
     //QString range("R1C1:R"+QString::number(container.size())+"C"+QString::number(container.at(0).size()));
     communicator->writeRequest(ui->lineSpreadSheetID->text(),
-                               ui->lineSheetName->text(),
+                               sheetName,
                                range,jsonData);
     return;
 }
@@ -367,16 +392,19 @@ void GoogleSheetsModifier::googleSheetAPI_read()
         char va = 'A'+ columns -1;
         range = QString("A1:")+QChar(va)+QString::number(rows);
     }
+    QString sheetName(ui->radioButton_sheetName_Manual->isChecked()?
+                          ui->lineSheetName->text():
+                          ui->comboBox_SheetNames->currentText());
     //QString range("R1C1:R"+QString::number(rows)+"C"+QString::number(columns));
     communicator->readRequest(ui->lineSpreadSheetID->text()
-                             ,ui->lineSheetName->text(),
+                             ,sheetName,
                              range,ui->line_API_Key->text());
     return;
 }
 
 void GoogleSheetsModifier::googleSheetAPI_ReadSheetIDs()
 {
-    if(!checkFields())
+    if(!checkFields(true))
     {
         getErrMsg("Read method Error: Nessesary fields are empty;");
         return;
@@ -392,7 +420,7 @@ void GoogleSheetsModifier::tableView_saveCurData_toFile()
     {
         lastpath = QDir::currentPath();
     }
-    QString filename(QFileDialog::getOpenFileName(
+    QString filename(QFileDialog::getSaveFileName(
                          this,"Save JSON file",lastpath,
                          "JSON (*.json)",nullptr,QFileDialog::DontUseNativeDialog));
     QVector<QVector<QVariant>> rawData;
@@ -402,6 +430,10 @@ void GoogleSheetsModifier::tableView_saveCurData_toFile()
     {
         getErrMsg(parser.getLastError());
         return;
+    }
+    if(!filename.endsWith(".json"))
+    {
+        filename.append(".json");
     }
     if(!filemanager.saveJSONdataToFile(JSONdata,filename))
     {
@@ -457,19 +489,24 @@ void GoogleSheetsModifier::googleSheetAPI_getFinishSig(const QByteArray& data)
         break;
     case JSONparser::JSONSheets:
     {
-        QMap<QString,int> sheetIDs;
+        //QMap<QString,int> sheetIDs;
+        sheetIDmap.clear();
+        ui->comboBox_SheetNames->clear();
         QStringList listOfIds(parser.getLastError().split("//",Qt::SkipEmptyParts));
         foreach(const QString& val,listOfIds)
         {
             QStringList pair(val.split(",",Qt::SkipEmptyParts));
-            sheetIDs.insert(pair.at(0),pair.at(1).toInt());
+            /*sheetIDs*/sheetIDmap.insert(pair.at(0),pair.at(1).toInt());
+            ui->comboBox_SheetNames->addItem(pair.at(0),pair.at(1));
         }
+        /*
         QMap<QString,int>::iterator it = sheetIDs.begin();
         while(it!=sheetIDs.end())
         {
             getErrMsg(it.key()+" : "+QString::number(it.value()));
             it++;
         }
+        */
     }
         break;
     default:
@@ -499,6 +536,19 @@ void GoogleSheetsModifier::checkRadioGroup()
         ui->groupBox_write_option->setEnabled(true);
         communicator->setFlags(communicator->getFlags()|HTTPScommunicator::oauth2Method);
     }
+
+    if(ui->radioButton_sheetName_Manual->isChecked())
+    {
+        ui->lineSheetName->setEnabled(true);
+        ui->comboBox_SheetNames->setEnabled(false);
+        ui->Button_ReadSheetIDs->setEnabled(false);
+    }
+    else if(ui->radioButton_sheetName_auto->isChecked())
+    {
+        ui->lineSheetName->setEnabled(false);
+        ui->comboBox_SheetNames->setEnabled(true);
+        ui->Button_ReadSheetIDs->setEnabled(true);
+    }
     return;
 }
 
@@ -516,6 +566,8 @@ void GoogleSheetsModifier::saveSettings()
     settings.insert("LastDirectoryPath",filemanager.getlastfilepath());
     settings.insert("API_Key_method",ui->radioButtonAPI_key->isChecked()?"Y":"N");
     settings.insert("OAuth2_method",ui->radioButton_OAuth2->isChecked()?"Y":"N");
+    settings.insert("SheetName_manualInput",ui->radioButton_sheetName_Manual->isChecked()?"Y":"N");
+    settings.insert("SheetName_autoCheck",ui->radioButton_sheetName_auto->isChecked()?"Y":"N");
     settings.insert("Flash_Changes",ui->checkBox_FlashChanges->isChecked()?"Y":"N");
     settings.insert("Write_rewrite_opt",ui->radioButton_option_rewrite->isChecked()?"Y":"N");
     settings.insert("Write_append_opt",ui->radioButton_option_append->isChecked()?"Y":"N");
@@ -629,6 +681,28 @@ void GoogleSheetsModifier::loadSettings()
             else
             {
                 ui->radioButton_OAuth2->setChecked(false);
+            }
+        }
+        else if(it.key()=="SheetName_manualInput")
+        {
+            if(it.value()=="Y")
+            {
+                ui->radioButton_sheetName_Manual->setChecked(true);
+            }
+            else
+            {
+                ui->radioButton_sheetName_Manual->setChecked(false);
+            }
+        }
+        else if(it.key()=="SheetName_autoCheck")
+        {
+            if(it.value()=="Y")
+            {
+                ui->radioButton_sheetName_auto->setChecked(true);
+            }
+            else
+            {
+                ui->radioButton_sheetName_auto->setChecked(false);
             }
         }
         else if(it.key()=="Flash_Changes")

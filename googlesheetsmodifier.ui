@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>861</width>
+    <width>882</width>
     <height>871</height>
    </rect>
   </property>
@@ -192,7 +192,7 @@
       <number>0</number>
      </property>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,1,0,1,0">
        <item>
         <widget class="QLabel" name="label">
          <property name="text">
@@ -204,6 +204,40 @@
         <widget class="QLineEdit" name="lineSheetName">
          <property name="placeholderText">
           <string>Can't be empty</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_12">
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QRadioButton" name="radioButton_sheetName_Manual">
+           <property name="text">
+            <string>Enter the sheet name manually</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="radioButton_sheetName_auto">
+           <property name="text">
+            <string>Load the list of sheet names</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QComboBox" name="comboBox_SheetNames"/>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button_ReadSheetIDs">
+         <property name="text">
+          <string>Read Sheet ID's</string>
          </property>
         </widget>
        </item>
@@ -249,13 +283,6 @@
       <widget class="QPushButton" name="ButtonWrite">
        <property name="text">
         <string>Write</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="Button_ReadSheetIDs">
-       <property name="text">
-        <string>Read Sheet ID's</string>
        </property>
       </widget>
      </item>
