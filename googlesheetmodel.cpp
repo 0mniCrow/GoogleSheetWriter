@@ -2,15 +2,6 @@
 
 GoogleSheetModel::GoogleSheetModel(QObject *tata):QAbstractTableModel(tata)
 {
-    /*
-    displayData.resize(start_rows);
-    loadedData.resize(start_rows);
-    for(int i = 0; i<start_rows;i++)
-    {
-        displayData[i].resize(start_columns);
-        loadedData[i].resize(start_columns);
-    }
-    */
     rearrangeTable(ROWS,COLUMNS);
     flashChanges = false;
     controlModifier=false;
@@ -86,20 +77,6 @@ QVariant GoogleSheetModel::data(const QModelIndex &index, int role) const
     else if(role==Qt::FontRole)
     {
         return displayData.at(index.row()).at(index.column()).font;
-        /*
-        if(displayData.at(index.row()).at(index.column()).fontFlag==CellObj::boldFont)
-        {
-            QFont bold;
-            bold.setBold(true);
-            return bold;
-        }
-        else if(displayData.at(index.row()).at(index.column()).fontFlag==CellObj::italicFont)
-        {
-            QFont italic;
-            italic.setItalic(true);
-            return italic;
-        }
-        */
     }
     else if(role==Qt::BackgroundRole)
     {
@@ -752,14 +729,6 @@ void GoogleSheetModel::setFontWeight(const QModelIndex& index, QFont::Weight fon
         displayData[index.row()][index.column()].font.setWeight(font_type);
     }
     emit dataChanged(index,index);
-//    if(displayData.at(index.row()).at(index.column()).fontFlag!=font_type)
-//    {
-//        displayData[index.row()][index.column()].fontFlag=font_type;
-//    }
-//    else
-//    {
-//        displayData[index.row()][index.column()].fontFlag=CellObj::noFont;
-//    }
     return;
 }
 

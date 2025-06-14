@@ -29,7 +29,7 @@ public:
     bool parseDataToJSON(const QVector<QVector<QVariant>>& data, const QString& sheetName, QByteArray& container);
     answerType parseJSONToData(const QByteArray& data, QVector<QVector<QVariant>>& container);
     bool parseSepDataToJSON(const QVector<QVector<QVariant> > &data, const QString &sheetName, QByteArray &container);
-    bool parseFontsToRequest(const QVector<QVector<QFont>>& data,const QString &sheetID, QByteArray& container);
+    bool parseFontsToRequest(const QVector<QVector<QFont>>& data,int sheetID, QByteArray& container);
 
     QString getLastError() const;
 

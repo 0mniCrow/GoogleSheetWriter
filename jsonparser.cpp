@@ -326,7 +326,7 @@ QString JSONparser::getLastError() const
     return lastError;
 }
 
-bool JSONparser::parseFontsToRequest(const QVector<QVector<QFont>>& data, const QString &sheetID, QByteArray& container)
+bool JSONparser::parseFontsToRequest(const QVector<QVector<QFont>>& data, int sheetID, QByteArray& container)
 {
     if(!data.size())
     {
@@ -345,10 +345,47 @@ bool JSONparser::parseFontsToRequest(const QVector<QVector<QFont>>& data, const 
             {
                 QJsonObject styleUpdate;
                 QJsonObject range;
+                QJsonObject textStyle;
+                QString fields;
                 range.insert("sheetId",sheetID);
+                range.insert("startRowIndex",i);
+                range.insert("endRowIndex",i+1);
+                range.insert("startColumnIndex",j);
+                range.insert("endColumnIndex",j+1);
+                styleUpdate.insert("range",range);
+                if(data.at(i).at(j).italic())
+                {
+                    textStyle.insert("italic",true);
+                    fields.append("italic");
+                }
+                if(data.at(i).at(j).bold())
+                {
+                    textStyle.insert("bold",true);
+                    if(!fields.isEmpty())
+                    {
+                        fields.append(',');
+                    }
+                    fields.append("bold");
+                }
+                if(data.at(i).at(j).family()!=defaultFont.family())
+                {
+                    QJsonObject fontFamily;
+                    fontFamily.insert("fontFamily",data.at(i).at(j).family());
+                    textStyle.insert("weightedFontFamily",fontFamily);
+                    if(!fields.isEmpty())
+                    {
+                        fields.append(',');
+                    }
+                    fields.append("weightedFontFamily");
+                }
+                styleUpdate.insert("textStyle",textStyle);
+                styleUpdate.insert("fields",fields);
+                requests.append(styleUpdate);
             }
         }
     }
     mainObj.insert("requests",requests);
+    mainDoc.setObject(mainObj);
+    container = mainDoc.toJson();
     return true;
 }
