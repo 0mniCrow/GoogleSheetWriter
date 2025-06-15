@@ -64,7 +64,7 @@ public:
     QMimeData*  mimeData(const QModelIndexList& indexex) const override;
     void loadDataToModel(QVector<QVector<QVariant>>& data);
     void loadSeparatedData(QVector<QVector<QVariant>>& data);
-    void loadFontsFromModel(QVector<QVector<QFont>>& data) const;
+    bool loadFontsFromModel(QVector<QVector<QFont>>& data) const;
     bool downloadDataFromModel(QVector<QVector<QVariant>>& container,bool selectedOnly = false) const;
     void setChangesToFlash(bool parameter);
     void setControlModifier(bool controlmod);

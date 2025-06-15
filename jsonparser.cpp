@@ -345,8 +345,10 @@ bool JSONparser::parseFontsToRequest(const QVector<QVector<QFont>>& data, int sh
             {
                 QJsonObject styleUpdate;
                 QJsonObject range;
-                QJsonObject textStyle;
-                QString fields;
+                QJsonObject cell;
+                QJsonObject userFormat;
+                QJsonObject textFormat;
+                QString fields("userEnteredFormat.textFormat");
                 range.insert("sheetId",sheetID);
                 range.insert("startRowIndex",i);
                 range.insert("endRowIndex",i+1);
@@ -355,34 +357,30 @@ bool JSONparser::parseFontsToRequest(const QVector<QVector<QFont>>& data, int sh
                 styleUpdate.insert("range",range);
                 if(data.at(i).at(j).italic())
                 {
-                    textStyle.insert("italic",true);
-                    fields.append("italic");
+                    textFormat.insert("italic",true);
                 }
                 if(data.at(i).at(j).bold())
                 {
-                    textStyle.insert("bold",true);
-                    if(!fields.isEmpty())
-                    {
-                        fields.append(',');
-                    }
-                    fields.append("bold");
+                    textFormat.insert("bold",true);
                 }
                 if(data.at(i).at(j).family()!=defaultFont.family())
                 {
-                    QJsonObject fontFamily;
-                    fontFamily.insert("fontFamily",data.at(i).at(j).family());
-                    textStyle.insert("weightedFontFamily",fontFamily);
-                    if(!fields.isEmpty())
-                    {
-                        fields.append(',');
-                    }
-                    fields.append("weightedFontFamily");
+                    textFormat.insert("fontFamily",data.at(i).at(j).family());
                 }
-                styleUpdate.insert("textStyle",textStyle);
+                userFormat.insert("textFormat",textFormat);
+                cell.insert("userEnteredFormat",userFormat);
+                styleUpdate.insert("cell",cell);
                 styleUpdate.insert("fields",fields);
-                requests.append(styleUpdate);
+                QJsonObject textStyleUpdate;
+                textStyleUpdate.insert("repeatCell",styleUpdate);
+                requests.append(textStyleUpdate);
             }
         }
+    }
+    if(requests.isEmpty())
+    {
+        lastError = "There are no fonts to change;";
+        return false;
     }
     mainObj.insert("requests",requests);
     mainDoc.setObject(mainObj);

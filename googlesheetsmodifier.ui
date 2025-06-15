@@ -301,6 +301,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QCheckBox" name="checkBox_writeFormating">
+       <property name="text">
+        <string>Write formatiing</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QGroupBox" name="groupBox_write_option">
        <property name="title">
         <string/>

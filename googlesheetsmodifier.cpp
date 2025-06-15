@@ -76,6 +76,7 @@ void GoogleSheetsModifier::createConnections()
     connect(ui->radioButton_option_rewrite,SIGNAL(clicked(bool)),this,SLOT(setWriteOption()));
     connect(ui->tableGoogleSheets,SIGNAL(clicked(QModelIndex)),model,SLOT(setNewSelectedIndex(QModelIndex)));
     connect(ui->checkBox_Selected_cells_work,SIGNAL(clicked(bool)),this,SLOT(setSelectedCellsOptions()));
+    connect(ui->checkBox_writeFormating,SIGNAL(clicked(bool)),this,SLOT(setFontsWritingOption()));
     connect(ui->checkBox_readWholeTable,SIGNAL(clicked(bool)),this,SLOT(setReadWholeSheet()));
     connect(ui->tableGoogleSheets,&QTableView::customContextMenuRequested,
             this,&GoogleSheetsModifier::tableView_catchContextMenuCall);
@@ -331,6 +332,11 @@ void GoogleSheetsModifier::googleSheetAPI_write()
                           ui->comboBox_SheetNames->currentText());
     if(ui->checkBox_Selected_cells_work->isChecked())
     {
+        if(ui->checkBox_writeFormating->isChecked())
+        {
+            getErrMsg("Program can't work both in \"Write Formatting\" and \"Selected Sells\" modes");
+            return;
+        }
         if(!model->downloadDataFromModel(container,true))
         {
             getErrMsg("Can't load separated data from model");
@@ -470,9 +476,56 @@ void GoogleSheetsModifier::googleSheetAPI_getFinishSig(const QByteArray& data)
     switch(parser.parseJSONToData(data,modelData))
     {
     case JSONparser::JSONerror:
+    {
+        getErrMsg(parser.getLastError());
+    }
+        break;
     case JSONparser::JSONwriteReport:
     {
         getErrMsg(parser.getLastError());
+        if(ui->checkBox_writeFormating->isChecked())
+        {
+            if(ui->checkBox_Selected_cells_work->isChecked())
+            {
+                getErrMsg("Can't upload fonts: incompatible with \"selected cells\"");
+            }
+            else
+            {
+                if(ui->comboBox_SheetNames->isEnabled()&&ui->comboBox_SheetNames->count())
+                {
+                    int sheetID(sheetIDmap.value(ui->comboBox_SheetNames->currentText()));
+                    QVector<QVector<QFont>> fonts;
+                    if(model->loadFontsFromModel(fonts))
+                    {
+                        QByteArray request;
+                        if(parser.parseFontsToRequest(fonts,sheetID,request))
+                        {
+                            filemanager.saveJSONdataToFile(request,QDir::currentPath()+"/fonts.json");
+                            if(communicator->getFlags()&HTTPScommunicator::w_Fonts)
+                            {
+                                communicator->setFlags(communicator->getFlags()&(~HTTPScommunicator::w_Fonts));
+                            }
+                            else
+                            {
+                                communicator->setFlags(communicator->getFlags()|HTTPScommunicator::w_Fonts);
+                                communicator->writeRequest(ui->lineSpreadSheetID->text(),
+                                                           ui->comboBox_SheetNames->currentText(),
+                                                           "bathUpdate",request);
+                            }
+
+                        }
+                        else
+                        {
+                            getErrMsg(parser.getLastError());
+                        }
+                    }
+                }
+                else
+                {
+                    getErrMsg("Can't upload fonts: no sheetID was load/selected;");
+                }
+            }
+        }
     }
         break;
     case JSONparser::JSONregularAns:
@@ -489,24 +542,15 @@ void GoogleSheetsModifier::googleSheetAPI_getFinishSig(const QByteArray& data)
         break;
     case JSONparser::JSONSheets:
     {
-        //QMap<QString,int> sheetIDs;
         sheetIDmap.clear();
         ui->comboBox_SheetNames->clear();
         QStringList listOfIds(parser.getLastError().split("//",Qt::SkipEmptyParts));
         foreach(const QString& val,listOfIds)
         {
             QStringList pair(val.split(",",Qt::SkipEmptyParts));
-            /*sheetIDs*/sheetIDmap.insert(pair.at(0),pair.at(1).toInt());
+            sheetIDmap.insert(pair.at(0),pair.at(1).toInt());
             ui->comboBox_SheetNames->addItem(pair.at(0),pair.at(1));
         }
-        /*
-        QMap<QString,int>::iterator it = sheetIDs.begin();
-        while(it!=sheetIDs.end())
-        {
-            getErrMsg(it.key()+" : "+QString::number(it.value()));
-            it++;
-        }
-        */
     }
         break;
     default:
@@ -816,6 +860,21 @@ void GoogleSheetsModifier::setSelectedCellsOptions()
     {
         communicator->setFlags(communicator->getFlags()&(~HTTPScommunicator::w_r_SeparateCells));
     }
+    return;
+}
+
+void GoogleSheetsModifier::setFontsWritingOption()
+{
+    /*
+    if(ui->checkBox_writeFormating->isChecked())
+    {
+        communicator->setFlags(communicator->getFlags()|HTTPScommunicator::w_Fonts);
+    }
+    else
+    {
+        communicator->setFlags(communicator->getFlags()&(~HTTPScommunicator::w_Fonts));
+    }
+    */
     return;
 }
 

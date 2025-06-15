@@ -94,6 +94,11 @@ bool HTTPScommunicator::isAuthorized() const
 void HTTPScommunicator::writeRequest(const QString& SSID, const QString& SSname,
                                      const QString &range, const QByteArray& data)
 {
+    if((httpflags&w_r_SeparateCells)&&(httpflags&httpflags&w_Fonts))
+    {
+        emit errormsg("Writing to server Error: both \"selected cells\" and \"formatting\" flags were risen;");
+        return;
+    }
     if(!(httpflags&oauth2Method))
     {
         emit errormsg("Writing to server Error: writing to the server can be only committed with OAuth2 method;");
@@ -121,30 +126,37 @@ void HTTPScommunicator::writeRequest(const QString& SSID, const QString& SSname,
     }
 
 
-    QString urlstr("https://sheets.googleapis.com/v4/spreadsheets/"+SSID+"/values");
-    if(httpflags&w_r_SeparateCells)
+    QString urlstr("https://sheets.googleapis.com/v4/spreadsheets/"+SSID);
+    if(httpflags&httpflags&w_Fonts)
     {
         urlstr.append(":batchUpdate");
     }
+    else if(httpflags&w_r_SeparateCells)
+    {
+        urlstr.append("/values:batchUpdate");
+    }
     else
     {
-        urlstr.append("/"+SSname+"!"+range);
+        urlstr.append("/values/"+SSname+"!"+range);
         if(httpflags&GoogleSheetsAppendMode)
         {
             urlstr.append(":append");
         }
     }
-    QUrlQuery query;
-    query.addQueryItem("valueInputOption","USER_ENTERED");
     QUrl url(urlstr);
-    url.setQuery(query);
+    if(!(httpflags&w_Fonts))
+    {
+        QUrlQuery query;
+        query.addQueryItem("valueInputOption","USER_ENTERED");
+        url.setQuery(query);
+    }
     QNetworkRequest request;
     request.setUrl(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader,"application/json");
     request.setRawHeader("Expect", "");
     request.setRawHeader("Authorization",QString("Bearer "+authorazer.token()).toUtf8());
     QNetworkReply * reply = nullptr;
-    if((httpflags&GoogleSheetsAppendMode)||(httpflags&w_r_SeparateCells))
+    if((httpflags&GoogleSheetsAppendMode)||(httpflags&w_r_SeparateCells)||(httpflags&w_Fonts))
     {
         reply = communicator->post(request,data);
     }
