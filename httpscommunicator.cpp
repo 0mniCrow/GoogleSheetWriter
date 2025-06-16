@@ -94,11 +94,11 @@ bool HTTPScommunicator::isAuthorized() const
 void HTTPScommunicator::writeRequest(const QString& SSID, const QString& SSname,
                                      const QString &range, const QByteArray& data)
 {
-    if((httpflags&w_r_SeparateCells)&&(httpflags&httpflags&w_Fonts))
-    {
-        emit errormsg("Writing to server Error: both \"selected cells\" and \"formatting\" flags were risen;");
-        return;
-    }
+//    if((httpflags&w_r_SeparateCells)&&(httpflags&httpflags&w_Fonts))
+//    {
+//        emit errormsg("Writing to server Error: both \"selected cells\" and \"formatting\" flags were risen;");
+//        return;
+//    }
     if(!(httpflags&oauth2Method))
     {
         emit errormsg("Writing to server Error: writing to the server can be only committed with OAuth2 method;");

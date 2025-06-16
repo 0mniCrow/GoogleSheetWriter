@@ -86,7 +86,7 @@ private slots:
     void setChangesFlash();
     void setWriteOption();
     void setSelectedCellsOptions();
-    void setFontsWritingOption();
+    //void setFontsWritingOption();
     void setReadWholeSheet();
 
 private:

@@ -76,7 +76,7 @@ void GoogleSheetsModifier::createConnections()
     connect(ui->radioButton_option_rewrite,SIGNAL(clicked(bool)),this,SLOT(setWriteOption()));
     connect(ui->tableGoogleSheets,SIGNAL(clicked(QModelIndex)),model,SLOT(setNewSelectedIndex(QModelIndex)));
     connect(ui->checkBox_Selected_cells_work,SIGNAL(clicked(bool)),this,SLOT(setSelectedCellsOptions()));
-    connect(ui->checkBox_writeFormating,SIGNAL(clicked(bool)),this,SLOT(setFontsWritingOption()));
+    //connect(ui->checkBox_writeFormating,SIGNAL(clicked(bool)),this,SLOT(setFontsWritingOption()));
     connect(ui->checkBox_readWholeTable,SIGNAL(clicked(bool)),this,SLOT(setReadWholeSheet()));
     connect(ui->tableGoogleSheets,&QTableView::customContextMenuRequested,
             this,&GoogleSheetsModifier::tableView_catchContextMenuCall);
@@ -332,11 +332,11 @@ void GoogleSheetsModifier::googleSheetAPI_write()
                           ui->comboBox_SheetNames->currentText());
     if(ui->checkBox_Selected_cells_work->isChecked())
     {
-        if(ui->checkBox_writeFormating->isChecked())
-        {
-            getErrMsg("Program can't work both in \"Write Formatting\" and \"Selected Sells\" modes");
-            return;
-        }
+//        if(ui->checkBox_writeFormating->isChecked())
+//        {
+//            getErrMsg("Program can't work both in \"Write Formatting\" and \"Selected Sells\" modes");
+//            return;
+//        }
         if(!model->downloadDataFromModel(container,true))
         {
             getErrMsg("Can't load separated data from model");
@@ -485,17 +485,17 @@ void GoogleSheetsModifier::googleSheetAPI_getFinishSig(const QByteArray& data)
         getErrMsg(parser.getLastError());
         if(ui->checkBox_writeFormating->isChecked())
         {
-            if(ui->checkBox_Selected_cells_work->isChecked())
-            {
-                getErrMsg("Can't upload fonts: incompatible with \"selected cells\"");
-            }
-            else
-            {
+//            if(ui->checkBox_Selected_cells_work->isChecked())
+//            {
+//                getErrMsg("Can't upload fonts: incompatible with \"selected cells\"");
+//            }
+//            else
+//            {
                 if(ui->comboBox_SheetNames->isEnabled()&&ui->comboBox_SheetNames->count())
                 {
                     int sheetID(sheetIDmap.value(ui->comboBox_SheetNames->currentText()));
                     QVector<QVector<QFont>> fonts;
-                    if(model->loadFontsFromModel(fonts))
+                    if(model->loadFontsFromModel(fonts,ui->checkBox_Selected_cells_work->isChecked()))
                     {
                         QByteArray request;
                         if(parser.parseFontsToRequest(fonts,sheetID,request))
@@ -524,7 +524,7 @@ void GoogleSheetsModifier::googleSheetAPI_getFinishSig(const QByteArray& data)
                 {
                     getErrMsg("Can't upload fonts: no sheetID was load/selected;");
                 }
-            }
+            //}
         }
     }
         break;
@@ -863,20 +863,20 @@ void GoogleSheetsModifier::setSelectedCellsOptions()
     return;
 }
 
-void GoogleSheetsModifier::setFontsWritingOption()
-{
-    /*
-    if(ui->checkBox_writeFormating->isChecked())
-    {
-        communicator->setFlags(communicator->getFlags()|HTTPScommunicator::w_Fonts);
-    }
-    else
-    {
-        communicator->setFlags(communicator->getFlags()&(~HTTPScommunicator::w_Fonts));
-    }
-    */
-    return;
-}
+//void GoogleSheetsModifier::setFontsWritingOption()
+//{
+
+//    if(ui->checkBox_writeFormating->isChecked())
+//    {
+//        communicator->setFlags(communicator->getFlags()|HTTPScommunicator::w_Fonts);
+//    }
+//    else
+//    {
+//        communicator->setFlags(communicator->getFlags()&(~HTTPScommunicator::w_Fonts));
+//    }
+
+//    return;
+//}
 
 void GoogleSheetsModifier::setReadWholeSheet()
 {

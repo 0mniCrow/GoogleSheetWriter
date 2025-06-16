@@ -315,7 +315,7 @@ void GoogleSheetModel::loadSeparatedData(QVector<QVector<QVariant>>& data)
     return;
 }
 
-bool GoogleSheetModel::loadFontsFromModel(QVector<QVector<QFont>>& data) const
+bool GoogleSheetModel::loadFontsFromModel(QVector<QVector<QFont>>& data, bool selectedOnly) const
 {
     data.clear();
     bool isChanged = false;
@@ -325,10 +325,28 @@ bool GoogleSheetModel::loadFontsFromModel(QVector<QVector<QFont>>& data) const
         QVector<QFont> row;
         for(int j = 0; j<displayData.at(i).size();j++)
         {
-            row.append(displayData.at(i).at(j).font);
-            if(displayData.at(i).at(j).font!=defaultFont)
+            if(selectedOnly)
             {
-                isChanged = true;
+                if(displayData.at(i).at(j).isSelected)
+                {
+                    row.append(displayData.at(i).at(j).font);
+                    if(displayData.at(i).at(j).font!=defaultFont)
+                    {
+                        isChanged = true;
+                    }
+                }
+                else
+                {
+                    row.append(QFont());
+                }
+            }
+            else
+            {
+                row.append(displayData.at(i).at(j).font);
+                if(displayData.at(i).at(j).font!=defaultFont)
+                {
+                    isChanged = true;
+                }
             }
         }
         data.append(row);
