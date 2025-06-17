@@ -20,7 +20,6 @@ class HTTPScommunicator:public QObject
 private:
 
     QNetworkAccessManager * communicator;
-    //QNetworkAccessManager* communicator_put;
     QOAuth2AuthorizationCodeFlow authorazer;
     QOAuthHttpServerReplyHandler replyHandler;
     unsigned char httpflags;

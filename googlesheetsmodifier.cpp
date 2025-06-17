@@ -485,46 +485,36 @@ void GoogleSheetsModifier::googleSheetAPI_getFinishSig(const QByteArray& data)
         getErrMsg(parser.getLastError());
         if(ui->checkBox_writeFormating->isChecked())
         {
-//            if(ui->checkBox_Selected_cells_work->isChecked())
-//            {
-//                getErrMsg("Can't upload fonts: incompatible with \"selected cells\"");
-//            }
-//            else
-//            {
-                if(ui->comboBox_SheetNames->isEnabled()&&ui->comboBox_SheetNames->count())
+            if(communicator->getFlags()&HTTPScommunicator::w_Fonts)
+            {
+                communicator->setFlags(communicator->getFlags()&(~HTTPScommunicator::w_Fonts));
+            }
+            else if(ui->comboBox_SheetNames->isEnabled()&&ui->comboBox_SheetNames->count())
+            {
+                int sheetID(sheetIDmap.value(ui->comboBox_SheetNames->currentText()));
+                QVector<QVector<QFont>> fonts;
+                if(model->loadFontsFromModel(fonts,ui->checkBox_Selected_cells_work->isChecked()))
                 {
-                    int sheetID(sheetIDmap.value(ui->comboBox_SheetNames->currentText()));
-                    QVector<QVector<QFont>> fonts;
-                    if(model->loadFontsFromModel(fonts,ui->checkBox_Selected_cells_work->isChecked()))
+                    QByteArray request;
+                    if(parser.parseFontsToRequest(fonts,sheetID,request))
                     {
-                        QByteArray request;
-                        if(parser.parseFontsToRequest(fonts,sheetID,request))
-                        {
-                            filemanager.saveJSONdataToFile(request,QDir::currentPath()+"/fonts.json");
-                            if(communicator->getFlags()&HTTPScommunicator::w_Fonts)
-                            {
-                                communicator->setFlags(communicator->getFlags()&(~HTTPScommunicator::w_Fonts));
-                            }
-                            else
-                            {
-                                communicator->setFlags(communicator->getFlags()|HTTPScommunicator::w_Fonts);
-                                communicator->writeRequest(ui->lineSpreadSheetID->text(),
-                                                           ui->comboBox_SheetNames->currentText(),
-                                                           "bathUpdate",request);
-                            }
+                        //filemanager.saveJSONdataToFile(request,QDir::currentPath()+"/fonts.json");
 
-                        }
-                        else
-                        {
-                            getErrMsg(parser.getLastError());
-                        }
+                        communicator->setFlags(communicator->getFlags()|HTTPScommunicator::w_Fonts);
+                        communicator->writeRequest(ui->lineSpreadSheetID->text(),
+                                                   ui->comboBox_SheetNames->currentText(),
+                                                   "bathUpdate",request);
+                    }
+                    else
+                    {
+                        getErrMsg(parser.getLastError());
                     }
                 }
-                else
-                {
-                    getErrMsg("Can't upload fonts: no sheetID was load/selected;");
-                }
-            //}
+            }
+            else
+            {
+                getErrMsg("Can't upload fonts: no sheetID was load/selected;");
+            }
         }
     }
         break;
@@ -532,12 +522,14 @@ void GoogleSheetsModifier::googleSheetAPI_getFinishSig(const QByteArray& data)
     {
         model->loadDataToModel(modelData);
         ui->tableGoogleSheets->resizeColumnsToContents();
+        //! Дадаць апрацоўку запампоўкі шрыфтоў
     }
         break;
     case JSONparser::JSONseparatedCell:
     {
         model->loadSeparatedData(modelData);
         ui->tableGoogleSheets->resizeColumnsToContents();
+        //! Дадаць апрацоўку запампоўкі шрыфтоў
     }
         break;
     case JSONparser::JSONSheets:
@@ -551,6 +543,11 @@ void GoogleSheetsModifier::googleSheetAPI_getFinishSig(const QByteArray& data)
             sheetIDmap.insert(pair.at(0),pair.at(1).toInt());
             ui->comboBox_SheetNames->addItem(pair.at(0),pair.at(1));
         }
+    }
+        break;
+    case JSONparser::JSONFonts:
+    {
+        //!TODO: Апрацоўка фантоў.
     }
         break;
     default:

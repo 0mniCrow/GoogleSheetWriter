@@ -3,9 +3,7 @@
 HTTPScommunicator::HTTPScommunicator(QObject *tata):QObject(tata),replyHandler(8080)
 {
     communicator = new QNetworkAccessManager();
-    //communicator_put = new QNetworkAccessManager();
     connect(communicator,SIGNAL(finished(QNetworkReply*)),this,SLOT(replyFinishedCatch(QNetworkReply*)));
-    //connect(communicator_put,SIGNAL(finished(QNetworkReply*)),this,SLOT(replyFinishedCatch(QNetworkReply*)));
     connect(&authorazer,&QOAuth2AuthorizationCodeFlow::granted,this,&HTTPScommunicator::authapprove);
     connect(&authorazer,SIGNAL(error(QString,QString,QUrl)),this,SLOT(errcatch(QString,QString,QUrl)));
     authorized = true;
@@ -190,24 +188,34 @@ void HTTPScommunicator::readRequest(const QString& SSID, const QString& SSname,
             return;
         }
     }
-    QString urlstr("https://sheets.googleapis.com/v4/spreadsheets/"+SSID+"/values");
+    QString urlstr("https://sheets.googleapis.com/v4/spreadsheets/"+SSID);
     QUrlQuery query;
-    if(httpflags&w_r_SeparateCells)
+    if(httpflags&w_Fonts)
     {
-        urlstr.append(":batchGet");
-        QStringList vals(range.split(',', Qt::SkipEmptyParts));
-        for(QStringList::iterator it = vals.begin();it!=vals.end();it++)
-        {
-            query.addQueryItem("ranges",SSname+"!"+*it+":"+*it);
-        }
-    }
-    else if(httpflags&r_WholeTable)
-    {
-        urlstr.append("/"+SSname+"!A1:Z1000");
+        query.addQueryItem("ranges",SSname+"!"+range);
+        query.addQueryItem("includeGridData","true");
+        query.addQueryItem("fields","sheets(properties,data)");
     }
     else
     {
-        urlstr.append("/"+SSname+"!"+range);
+        urlstr.append("/values");
+        if(httpflags&w_r_SeparateCells)
+        {
+            urlstr.append(":batchGet");
+            QStringList vals(range.split(',', Qt::SkipEmptyParts));
+            for(QStringList::iterator it = vals.begin();it!=vals.end();it++)
+            {
+                query.addQueryItem("ranges",SSname+"!"+*it+":"+*it);
+            }
+        }
+        else if(httpflags&r_WholeTable)
+        {
+            urlstr.append("/"+SSname+"!A1:Z1000");
+        }
+        else
+        {
+            urlstr.append("/"+SSname+"!"+range);
+        }
     }
     QUrl url(urlstr);
     QNetworkRequest request;

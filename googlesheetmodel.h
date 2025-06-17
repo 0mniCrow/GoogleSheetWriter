@@ -65,6 +65,7 @@ public:
     void loadDataToModel(QVector<QVector<QVariant>>& data);
     void loadSeparatedData(QVector<QVector<QVariant>>& data);
     bool loadFontsFromModel(QVector<QVector<QFont>>& data, bool selectedOnly = false) const;
+    bool loadFontsToModel(QVector<QVector<QVariant>>& fonts, bool selectedOnly = false);
     bool downloadDataFromModel(QVector<QVector<QVariant>>& container,bool selectedOnly = false) const;
     void setChangesToFlash(bool parameter);
     void setControlModifier(bool controlmod);

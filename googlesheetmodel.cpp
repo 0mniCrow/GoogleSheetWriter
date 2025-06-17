@@ -354,6 +354,12 @@ bool GoogleSheetModel::loadFontsFromModel(QVector<QVector<QFont>>& data, bool se
     return isChanged;
 }
 
+bool GoogleSheetModel::loadFontsToModel(QVector<QVector<QVariant>>& fonts, bool selectedOnly)
+{
+    //!TODO : выпампаваць дадзеныя шрыфты для табліцы, не зьмяняць памер табліцы, а кантраліраваць рамкіж
+    return true;
+}
+
 bool GoogleSheetModel::downloadDataFromModel(QVector<QVector<QVariant>>& container, bool selectedOnly) const
 {
     if(displayData.isEmpty())

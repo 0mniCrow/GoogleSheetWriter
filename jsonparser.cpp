@@ -260,6 +260,35 @@ JSONparser::answerType JSONparser::parseJSONToData(const QByteArray& data, QVect
         for(int i =0;i<sheets.size();i++)
         {
             QJsonObject sheet(sheets.at(i).toObject());
+            if(sheet.contains("data"))
+            {
+                QJsonArray font_data(sheet.value("data").toArray());
+                if(!font_data.size())
+                {
+                    lastError = "JSON Parser can't find font data in the read array;";
+                    return JSONerror;
+                }
+                QJsonArray row_data(font_data.at(0).toArray());
+                container.clear();
+                for(int i = 0; i<row_data.size();i++)
+                {
+                    QVector<QVariant> row;
+                    QJsonArray values(row_data.at(i).toObject().value("values").toArray());
+                    for(int j = 0; j<values.size();j++)
+                    {
+                        QJsonObject value(values.at(j).toObject());
+                        QJsonObject effective_format(value.value("effectiveFormat").toObject());
+                        QJsonObject text_format(effective_format.value("textFormat").toObject());
+                        QFont new_font;
+                        new_font.setFamily(text_format.value("fontFamily").toString());
+                        new_font.setBold(text_format.value("bold").toBool());
+                        new_font.setItalic(text_format.value("italic").toBool());
+                        row.append(new_font);
+                    }
+                    container.append(row);
+                }
+                return JSONFonts;
+            }
             QJsonObject properties(sheet.value("properties").toObject());
             lastError.append(properties.value("title").toString()+","+QString::number(properties.value("sheetId").toInt())+"//");
         }
