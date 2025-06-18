@@ -356,6 +356,37 @@ bool GoogleSheetModel::loadFontsFromModel(QVector<QVector<QFont>>& data, bool se
 
 bool GoogleSheetModel::loadFontsToModel(QVector<QVector<QVariant>>& fonts, bool selectedOnly)
 {
+    for(int i = 0; i<fonts.size();i++)
+    {
+        if(i>=displayData.size())
+        {
+            break;
+        }
+        for(int j = 0; j<fonts.at(i).size();j++)
+        {
+            if(j>=displayData.at(i).size())
+            {
+                break;
+            }
+            if(selectedOnly)
+            {
+                if(displayData.at(i).at(j).isSelected)
+                {
+                    displayData[i][j].font=fonts.at(i).at(j).value<QFont>();
+                    emit dataChanged(createIndex(i,j),createIndex(i,j));
+                }
+                else
+                {
+                    continue;
+                }
+            }
+            else
+            {
+                displayData[i][j].font=fonts.at(i).at(j).value<QFont>();
+                emit dataChanged(createIndex(i,j),createIndex(i,j));
+            }
+        }
+    }
     //!TODO : выпампаваць дадзеныя шрыфты для табліцы, не зьмяняць памер табліцы, а кантраліраваць рамкіж
     return true;
 }

@@ -268,7 +268,8 @@ JSONparser::answerType JSONparser::parseJSONToData(const QByteArray& data, QVect
                     lastError = "JSON Parser can't find font data in the read array;";
                     return JSONerror;
                 }
-                QJsonArray row_data(font_data.at(0).toArray());
+                QJsonObject data_obj(font_data.at(0).toObject());
+                QJsonArray row_data(data_obj.value("rowData").toArray());
                 container.clear();
                 for(int i = 0; i<row_data.size();i++)
                 {

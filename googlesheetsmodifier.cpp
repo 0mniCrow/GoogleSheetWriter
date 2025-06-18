@@ -384,7 +384,8 @@ void GoogleSheetsModifier::googleSheetAPI_read()
         return;
     }
     QString range;
-    if(ui->checkBox_Selected_cells_work->isChecked())
+    if(ui->checkBox_Selected_cells_work->isChecked()&&
+            (!(communicator->getFlags()&HTTPScommunicator::w_Fonts)))
     {
         range = model->getSelectedIndexes();
         if(range.isEmpty())
@@ -522,14 +523,25 @@ void GoogleSheetsModifier::googleSheetAPI_getFinishSig(const QByteArray& data)
     {
         model->loadDataToModel(modelData);
         ui->tableGoogleSheets->resizeColumnsToContents();
-        //! Дадаць апрацоўку запампоўкі шрыфтоў
+        if(ui->checkBox_writeFormating->isChecked())
+        {
+            communicator->setFlags(communicator->getFlags()|HTTPScommunicator::w_Fonts);
+            googleSheetAPI_read();
+            //! Дадаць апрацоўку запампоўкі шрыфтоў
+        }
+
     }
         break;
     case JSONparser::JSONseparatedCell:
     {
         model->loadSeparatedData(modelData);
         ui->tableGoogleSheets->resizeColumnsToContents();
-        //! Дадаць апрацоўку запампоўкі шрыфтоў
+        if(ui->checkBox_writeFormating->isChecked())
+        {
+            communicator->setFlags(communicator->getFlags()|HTTPScommunicator::w_Fonts);
+            googleSheetAPI_read();
+        }
+
     }
         break;
     case JSONparser::JSONSheets:
@@ -547,7 +559,9 @@ void GoogleSheetsModifier::googleSheetAPI_getFinishSig(const QByteArray& data)
         break;
     case JSONparser::JSONFonts:
     {
-        //!TODO: Апрацоўка фантоў.
+        communicator->setFlags(communicator->getFlags()&(~HTTPScommunicator::w_Fonts));
+        model->loadFontsToModel(modelData,ui->checkBox_Selected_cells_work->isChecked());
+        ui->tableGoogleSheets->resizeColumnsToContents();
     }
         break;
     default:
@@ -657,14 +671,6 @@ void GoogleSheetsModifier::loadSettings(int &rows, int &columns)
 
 void GoogleSheetsModifier::loadSettings()
 {
-    /*
-    QStringList settings;
-    if(!filemanager.loadPreferences(settings))
-    {
-        getErrMsg("Application can't load settings;");
-        return;
-    }
-    */
     QByteArray data;
     QMap<QString,QString> settings;
 
@@ -860,20 +866,6 @@ void GoogleSheetsModifier::setSelectedCellsOptions()
     return;
 }
 
-//void GoogleSheetsModifier::setFontsWritingOption()
-//{
-
-//    if(ui->checkBox_writeFormating->isChecked())
-//    {
-//        communicator->setFlags(communicator->getFlags()|HTTPScommunicator::w_Fonts);
-//    }
-//    else
-//    {
-//        communicator->setFlags(communicator->getFlags()&(~HTTPScommunicator::w_Fonts));
-//    }
-
-//    return;
-//}
 
 void GoogleSheetsModifier::setReadWholeSheet()
 {
