@@ -29,6 +29,7 @@ GoogleSheetsModifier::GoogleSheetsModifier(QWidget *parent) :
         model->rearrangeTable(start_rows,start_columns);
     }
     loadSettings();
+
     return;
 }
 
@@ -76,7 +77,6 @@ void GoogleSheetsModifier::createConnections()
     connect(ui->radioButton_option_rewrite,SIGNAL(clicked(bool)),this,SLOT(setWriteOption()));
     connect(ui->tableGoogleSheets,SIGNAL(clicked(QModelIndex)),model,SLOT(setNewSelectedIndex(QModelIndex)));
     connect(ui->checkBox_Selected_cells_work,SIGNAL(clicked(bool)),this,SLOT(setSelectedCellsOptions()));
-    //connect(ui->checkBox_writeFormating,SIGNAL(clicked(bool)),this,SLOT(setFontsWritingOption()));
     connect(ui->checkBox_readWholeTable,SIGNAL(clicked(bool)),this,SLOT(setReadWholeSheet()));
     connect(ui->tableGoogleSheets,&QTableView::customContextMenuRequested,
             this,&GoogleSheetsModifier::tableView_catchContextMenuCall);
@@ -104,6 +104,8 @@ void GoogleSheetsModifier::googleSheetAPI_OAuth2_authorize()
         communicator->AuthorizeRequest(ui->lineClientID->text(),ui->lineClientSecret->text());
         return;
     }
+    flashRed(ui->lineClientID);
+    flashRed(ui->lineClientSecret);
     getErrMsg("authification fields are empty;");
     return;
 }
@@ -211,6 +213,13 @@ void GoogleSheetsModifier::credentials_APIkey_File_choose()
 void GoogleSheetsModifier::credentials_APIkey_File_load()
 {
     QString filename(ui->lineAPI_key_filename->text());
+    if(filename.isEmpty())
+    {
+        flashRed(ui->lineAPI_key_filename);
+        getErrMsg("File name to load API_Key is empty;");
+        return;
+
+    }
     QString Api_key;
     if(!filemanager.openAPIfile(filename,Api_key))
     {
@@ -244,6 +253,12 @@ void GoogleSheetsModifier::credentials_OAuth2_File_choose()
 void GoogleSheetsModifier::credentials_OAuth2_File_load()
 {
     QString filename(ui->lineEdit_OAuth_filename->text());
+    if(filename.isEmpty())
+    {
+        flashRed(ui->lineEdit_OAuth_filename);
+        getErrMsg("File name to load OAuth2 credentials is empty;");
+        return;
+    }
     QStringList data;
     if(!filemanager.openOAuthFile(filename,data))
     {
@@ -273,6 +288,7 @@ bool GoogleSheetsModifier::checkFields(bool ignore_sheetName)
         {
             if(ui->lineSheetName->text().isEmpty())
             {
+                flashRed(ui->lineSheetName);
                 getErrMsg("Credentials missing Error: Sheet Name is missing;");
                 return false;
             }
@@ -281,6 +297,7 @@ bool GoogleSheetsModifier::checkFields(bool ignore_sheetName)
         {
             if(!ui->comboBox_SheetNames->count())
             {
+                flashRed(ui->comboBox_SheetNames);
                 getErrMsg("Credentials missing Error: Sheet Name is missing;");
                 return false;
             }
@@ -288,6 +305,7 @@ bool GoogleSheetsModifier::checkFields(bool ignore_sheetName)
     }
     if(ui->lineSpreadSheetID->text().isEmpty())
     {
+        flashRed(ui->lineSpreadSheetID);
         getErrMsg("Credentials missing Error: Spread Sheet ID is empty;");
         return false;
     }
@@ -296,6 +314,8 @@ bool GoogleSheetsModifier::checkFields(bool ignore_sheetName)
         if((ui->lineClientID->text().isEmpty())||
             (ui->lineClientSecret->text().isEmpty()))
         {
+            flashRed(ui->lineClientID);
+            flashRed(ui->lineClientSecret);
             getErrMsg("Credentials missing Error: OAuth2 credentials are empty;");
             return false;
         }
@@ -305,6 +325,7 @@ bool GoogleSheetsModifier::checkFields(bool ignore_sheetName)
     {
         if(ui->line_API_Key->text().isEmpty())
         {
+            flashRed(ui->line_API_Key);
             getErrMsg("Credentials missing Error: API_Key is empty;");
             return false;
         }
@@ -471,6 +492,7 @@ void GoogleSheetsModifier::tableView_loadData_fromFile()
     return;
 }
 
+//Метад выклікаецца адказам сервера на HTTP запыт
 void GoogleSheetsModifier::googleSheetAPI_getFinishSig(const QByteArray& data)
 {
     QVector<QVector<QVariant>> modelData;
@@ -884,6 +906,7 @@ void GoogleSheetsModifier::setReadWholeSheet()
 void GoogleSheetsModifier::tableView_catchContextMenuCall(const QPoint& point)
 {
     QModelIndex index(ui->tableGoogleSheets->indexAt(point));
+    QModelIndexList indexList(select_model->selectedIndexes());
     QMenu contextMenu(this);
     QAction* cutAct = contextMenu.addAction("Cut");
     QAction* copyAct = contextMenu.addAction("Copy");
@@ -919,40 +942,91 @@ void GoogleSheetsModifier::tableView_catchContextMenuCall(const QPoint& point)
     }
     else if(selectedAction == boldFontAct)
     {
-        model->setFontWeight(index,QFont::Bold);
+        foreach(const QModelIndex& sub_index,indexList)
+        {
+            model->setFontWeight(sub_index,QFont::Bold);
+        }
     }
     else if(selectedAction == italicFontAct)
     {
-        model->setFontStyle(index,QFont::StyleItalic);
+        foreach(const QModelIndex& sub_index,indexList)
+        {
+            model->setFontStyle(sub_index,QFont::StyleItalic);
+        }
     }
     else if(selectedAction == standardFontAct)
     {
-        model->setFontWeight(index,QFont::Normal);
-        model->setFontStyle(index,QFont::StyleNormal);
+        foreach(const QModelIndex& sub_index,indexList)
+        {
+            model->setFontWeight(sub_index,QFont::Normal);
+            model->setFontStyle(sub_index,QFont::StyleNormal);
+        }
     }
     else if(selectedAction == timesFontAct)
     {
-        model->setFont(index,"Times New Roman");
+        foreach(const QModelIndex& sub_index,indexList)
+        {
+            model->setFont(sub_index,"Times New Roman");
+        }
     }
     else if(selectedAction == helveticaFontAct)
     {
-        model->setFont(index,"Georgia");
+        foreach(const QModelIndex& sub_index,indexList)
+        {
+            model->setFont(sub_index,"Georgia");
+        }
     }
     else if(selectedAction == arialFontAct)
     {
-        model->setFont(index,"Arial");
+        foreach(const QModelIndex& sub_index,indexList)
+        {
+            model->setFont(sub_index,"Arial");
+        }
     }
     else if(selectedAction == comicsansFontAct)
     {
-        model->setFont(index,"Comic Sans MS");
+        foreach(const QModelIndex& sub_index,indexList)
+        {
+            model->setFont(sub_index,"Comic Sans MS");
+        }
     }
     else if(selectedAction == defauldFontAct)
     {
-        model->setFont(index,QString());
+        foreach(const QModelIndex& sub_index,indexList)
+        {
+            model->setFont(sub_index,QString());
+        }
     }
     else
     {
 
     }
+    return;
+}
+
+void GoogleSheetsModifier::flashRed(QWidget * widgetToFlash)
+{
+    QColor redColor(247,131,131);
+    QPalette palette(widgetToFlash->palette());
+    palette.setBrush(QPalette::Base,redColor);
+    widgetToFlash->setPalette(palette);
+    flashedWidgets.enqueue(widgetToFlash);
+    QTimer * timer = new QTimer(this);
+    connect(timer,&QTimer::timeout,this,&GoogleSheetsModifier::stopFlashRed);
+    connect(timer,&QTimer::timeout,timer,&QTimer::deleteLater);
+    timer->start(1000);
+    return;
+}
+void GoogleSheetsModifier::stopFlashRed()
+{
+    if(flashedWidgets.isEmpty())
+    {
+        return;
+    }
+    QWidget* widget_to_de_flash = flashedWidgets.dequeue();
+    QColor whiteColor(Qt::white);
+    QPalette palette(widget_to_de_flash->palette());
+    palette.setBrush(QPalette::Base,whiteColor);
+    widget_to_de_flash->setPalette(palette);
     return;
 }

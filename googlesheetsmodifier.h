@@ -20,6 +20,7 @@
 #include <QAction>
 #include <QActionGroup>
 #include <QFontDatabase>
+#include <QTimer>
 
 namespace Ui {
 class GoogleSheetsModifier;
@@ -36,6 +37,7 @@ private:
     JSONparser parser;
     FileManager filemanager;
     QMap<QString,int> sheetIDmap;
+    QQueue<QWidget*> flashedWidgets;
 
     bool checkFields(bool ignore_sheetName = false);
     void createConnections();
@@ -72,9 +74,11 @@ private slots:
     void googleSheetAPI_OAuth2_authorize();
     void googleSheetAPI_ReadSheetIDs();
 
-
+    //Аперацыі з візуальным інтэрфэйсам
     void setProgressBar(qint64 val,qint64 total);
     void getErrMsg(const QString& errMsg);
+    void flashRed(QWidget * widgetToFlash);
+    void stopFlashRed();
 
 
 

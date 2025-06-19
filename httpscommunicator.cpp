@@ -14,9 +14,7 @@ HTTPScommunicator::HTTPScommunicator(QObject *tata):QObject(tata),replyHandler(8
 HTTPScommunicator::~HTTPScommunicator()
 {
     disconnect(communicator,SIGNAL(finished(QNetworkReply*)),this,SLOT(replyFinishedCatch(QNetworkReply*)));
-
     delete communicator;
-
     return;
 }
 
