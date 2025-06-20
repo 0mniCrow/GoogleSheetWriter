@@ -30,6 +30,7 @@ GoogleSheetsModifier::GoogleSheetsModifier(QWidget *parent) :
     }
     loadSettings();
 
+
     return;
 }
 
@@ -645,11 +646,12 @@ void GoogleSheetsModifier::saveSettings()
     settings.insert("OAuth2_method",ui->radioButton_OAuth2->isChecked()?"Y":"N");
     settings.insert("SheetName_manualInput",ui->radioButton_sheetName_Manual->isChecked()?"Y":"N");
     settings.insert("SheetName_autoCheck",ui->radioButton_sheetName_auto->isChecked()?"Y":"N");
-    settings.insert("Flash_Changes",ui->checkBox_FlashChanges->isChecked()?"Y":"N");
     settings.insert("Write_rewrite_opt",ui->radioButton_option_rewrite->isChecked()?"Y":"N");
     settings.insert("Write_append_opt",ui->radioButton_option_append->isChecked()?"Y":"N");
+    settings.insert("Flash_Changes",ui->checkBox_FlashChanges->isChecked()?"Y":"N");
     settings.insert("Read_Whole_Table",ui->checkBox_readWholeTable->isChecked()?"Y":"N");
     settings.insert("R_W_Separate_Cells",ui->checkBox_Selected_cells_work->isChecked()?"Y":"N");
+    settings.insert("R_W_Formatting",ui->checkBox_writeFormating->isChecked()?"Y":"N");
     ParseXML_dataToXML(data,settings);
     if(data.isEmpty())
     {
@@ -827,6 +829,17 @@ void GoogleSheetsModifier::loadSettings()
             else
             {
                 ui->checkBox_Selected_cells_work->setChecked(false);
+            }
+        }
+        else if(it.key()=="R_W_Formatting")
+        {
+            if(it.value()=="Y")
+            {
+                ui->checkBox_writeFormating->setChecked(true);
+            }
+            else
+            {
+                ui->checkBox_writeFormating->setChecked(false);
             }
         }
         checkRadioGroup();

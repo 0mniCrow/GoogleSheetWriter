@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>882</width>
+    <width>904</width>
     <height>871</height>
    </rect>
   </property>
@@ -294,16 +294,16 @@
       </widget>
      </item>
      <item>
-      <widget class="QCheckBox" name="checkBox_readWholeTable">
+      <widget class="QCheckBox" name="checkBox_writeFormating">
        <property name="text">
-        <string>Read whole table</string>
+        <string>Read/Write formatting</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QCheckBox" name="checkBox_writeFormating">
+      <widget class="QCheckBox" name="checkBox_readWholeTable">
        <property name="text">
-        <string>Write formatiing</string>
+        <string>Read whole table</string>
        </property>
       </widget>
      </item>

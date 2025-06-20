@@ -81,7 +81,7 @@ private slots:
     void stopFlashRed();
 
 
-
+    //Аперацыі з наладамі
     void saveSettings();
     void loadSettings();
     void loadSettings(int & rows,int & columns);
