@@ -18,6 +18,7 @@ SOURCES += main.cpp\
     httpscommunicator.cpp \
     jsonparser.cpp \
     googlesheetmodel.cpp \
+    logicmanager.cpp \
     xmlparser.cpp
 
 HEADERS  += googlesheetsmodifier.h \
@@ -25,6 +26,7 @@ HEADERS  += googlesheetsmodifier.h \
     httpscommunicator.h \
     jsonparser.h \
     googlesheetmodel.h \
+    logicmanager.h \
     xmlparser.h
 
 FORMS    += googlesheetsmodifier.ui

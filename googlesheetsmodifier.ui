@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>904</width>
+    <width>937</width>
     <height>871</height>
    </rect>
   </property>
@@ -232,7 +232,11 @@
         </layout>
        </item>
        <item>
-        <widget class="QComboBox" name="comboBox_SheetNames"/>
+        <widget class="QComboBox" name="comboBox_SheetNames">
+         <property name="placeholderText">
+          <string>Should be load when chosen</string>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QPushButton" name="Button_ReadSheetIDs">
