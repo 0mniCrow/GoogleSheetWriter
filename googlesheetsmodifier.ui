@@ -84,7 +84,7 @@
              <item>
               <widget class="QLineEdit" name="line_API_Key">
                <property name="readOnly">
-                <bool>true</bool>
+                <bool>false</bool>
                </property>
                <property name="placeholderText">
                 <string>API key</string>
@@ -232,11 +232,7 @@
         </layout>
        </item>
        <item>
-        <widget class="QComboBox" name="comboBox_SheetNames">
-         <property name="placeholderText">
-          <string>Should be load when chosen</string>
-         </property>
-        </widget>
+        <widget class="QComboBox" name="comboBox_SheetNames"/>
        </item>
        <item>
         <widget class="QPushButton" name="Button_ReadSheetIDs">

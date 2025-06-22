@@ -38,6 +38,7 @@ private:
     FileManager filemanager;
     QMap<QString,int> sheetIDmap;
     QQueue<QWidget*> flashedWidgets;
+    bool status_file_reading;
 
     bool checkFields(bool ignore_sheetName = false);
     void createConnections();

@@ -10,7 +10,9 @@ JSONparser::~JSONparser()
 
 }
 
-bool JSONparser::parseDataToJSON(const QVector<QVector<QVariant>>& data, const QString& sheetName, QByteArray& container)
+bool JSONparser::parseDataToJSON(const QVector<QVector<QVariant>>& data,
+                                 const QString& sheetName,
+                                 QByteArray& container)
 {
     if(!data.size())
     {
@@ -61,7 +63,7 @@ bool JSONparser::parseDataToJSON(const QVector<QVector<QVariant>>& data, const Q
     }
     mainObj.insert("values",values);
     mainDoc.setObject(mainObj);
-    container = mainDoc.toJson(QJsonDocument::Compact);
+    container = mainDoc.toJson(/*QJsonDocument::Compact*/);
     return true;
 }
 bool JSONparser::parseSepDataToJSON(const QVector<QVector<QVariant>>& data, const QString& sheetName, QByteArray& container)
@@ -115,10 +117,6 @@ JSONparser::answerType JSONparser::parseJSONToData(const QByteArray& data, QVect
         lastError = jsonErr.errorString();
         return JSONerror;
     }
-
-//    QString ermsg = mainDoc.toJson();
-//    lastError = ermsg;
-//    return false;
 
     QJsonObject mainObj(mainDoc.object());
     if(mainObj.contains("values"))

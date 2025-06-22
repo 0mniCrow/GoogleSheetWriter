@@ -29,8 +29,7 @@ GoogleSheetsModifier::GoogleSheetsModifier(QWidget *parent) :
         model->rearrangeTable(start_rows,start_columns);
     }
     loadSettings();
-
-
+    status_file_reading=false;
     return;
 }
 
@@ -199,13 +198,9 @@ void GoogleSheetsModifier::credentials_APIkey_File_choose()
     QString filename(QFileDialog::getOpenFileName(
                          this,"Open API key file",lastpath,
                          "Text file (*.txt)",nullptr,QFileDialog::DontUseNativeDialog));
-
-    //QString controlpath = QDir::cleanPath(filename);
-
     ui->lineAPI_key_filename->setText(filename);
     if(!filename.isEmpty())
     {
-        filemanager.setlastfilepath(filename.left(filename.lastIndexOf('.')));
         credentials_APIkey_File_load();
     }
     return;
@@ -242,10 +237,8 @@ void GoogleSheetsModifier::credentials_OAuth2_File_choose()
                          "Text file (*.txt)",nullptr,QFileDialog::DontUseNativeDialog));
     ui->lineEdit_OAuth_filename->setText(filename);
 
-    //QString controlpath = QDir::cleanPath(filename);
     if(!filename.isEmpty())
     {
-        filemanager.setlastfilepath(filename.left(filename.lastIndexOf('.')));
         credentials_OAuth2_File_load();
     }
     return;
@@ -260,23 +253,14 @@ void GoogleSheetsModifier::credentials_OAuth2_File_load()
         getErrMsg("File name to load OAuth2 credentials is empty;");
         return;
     }
-    QStringList data;
-    if(!filemanager.openOAuthFile(filename,data))
+    QString client_id,client_secret;
+    if(!filemanager.openOAuthFile(filename,client_id,client_secret))
     {
         getErrMsg("Can't open ["+filename+"] file to load OAuth2 credentials;");
         return;
     }
-    for(const QString& str:data)
-    {
-        if(str.contains("Client ID:"))
-        {
-            ui->lineClientID->setText(str.sliced(str.indexOf(':')+1));
-        }
-        else if(str.contains("Client secret:"))
-        {
-            ui->lineClientSecret->setText(str.sliced(str.indexOf(':')+1));
-        }
-    }
+    ui->lineClientID->setText(client_id);
+    ui->lineClientSecret->setText(client_secret);
     return;
 }
 
@@ -354,11 +338,6 @@ void GoogleSheetsModifier::googleSheetAPI_write()
                           ui->comboBox_SheetNames->currentText());
     if(ui->checkBox_Selected_cells_work->isChecked())
     {
-//        if(ui->checkBox_writeFormating->isChecked())
-//        {
-//            getErrMsg("Program can't work both in \"Write Formatting\" and \"Selected Sells\" modes");
-//            return;
-//        }
         if(!model->downloadDataFromModel(container,true))
         {
             getErrMsg("Can't load separated data from model");
@@ -469,7 +448,6 @@ void GoogleSheetsModifier::tableView_saveCurData_toFile()
         getErrMsg("Can't save JSON data to file ["+filename+"];");
         return;
     }
-    filemanager.setlastfilepath(filename.left(filename.lastIndexOf('.')));
     return;
 }
 void GoogleSheetsModifier::tableView_loadData_fromFile()
@@ -488,8 +466,9 @@ void GoogleSheetsModifier::tableView_loadData_fromFile()
         getErrMsg("Can't load JSON data from file ["+filename+"];");
         return;
     }
-    filemanager.setlastfilepath(filename.left(filename.lastIndexOf('.')));
+    status_file_reading=true;
     googleSheetAPI_getFinishSig(JSONdata);
+    status_file_reading=false;
     return;
 }
 
@@ -546,11 +525,10 @@ void GoogleSheetsModifier::googleSheetAPI_getFinishSig(const QByteArray& data)
     {
         model->loadDataToModel(modelData);
         ui->tableGoogleSheets->resizeColumnsToContents();
-        if(ui->checkBox_writeFormating->isChecked())
+        if(ui->checkBox_writeFormating->isChecked()&&(!status_file_reading))
         {
             communicator->setFlags(communicator->getFlags()|HTTPScommunicator::w_Fonts);
             googleSheetAPI_read();
-            //! Дадаць апрацоўку запампоўкі шрыфтоў
         }
 
     }
